@@ -123,6 +123,8 @@ export default function KeyboardLandingPage() {
     keyboardSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const isDark = currentTheme.isDark || currentTheme.category === "Dark";
+
   return (
     <div
       className={`min-h-screen ${currentTheme.appBg} ${currentTheme.appText} flex flex-col items-center justify-start selection:bg-orange-500 selection:text-white relative overflow-x-clip transition-colors duration-300`}
@@ -135,7 +137,9 @@ export default function KeyboardLandingPage() {
 
       {/* Sticky Glassmorphic Top Navigation */}
       <header
-        className={`sticky top-0 z-40 w-full backdrop-blur-xl bg-white/70 border-b ${currentTheme.headerBorder} px-4 sm:px-8 py-3.5 transition-colors shadow-xs`}
+        className={`sticky top-0 z-40 w-full backdrop-blur-xl border-b ${
+          isDark ? "bg-slate-950/80 border-slate-800 text-white" : "bg-white/80 border-slate-200 text-slate-900"
+        } px-4 sm:px-8 py-3.5 transition-colors shadow-xs`}
       >
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           {/* Brand Logo & Back to Home */}
@@ -143,15 +147,17 @@ export default function KeyboardLandingPage() {
             {currentPage !== "home" ? (
               <button
                 onClick={() => setCurrentPage("home")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-md hover:bg-slate-800 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-600 text-white text-xs font-bold shadow-md hover:bg-orange-500 transition-all cursor-pointer"
               >
-                <ArrowLeft className="w-3.5 h-3.5 text-orange-400" />
+                <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Home</span>
               </button>
             ) : (
               <button
                 onClick={() => setIsThemeSidebarOpen(true)}
-                className="p-2 rounded-xl bg-slate-900 text-white shadow-md hover:scale-105 transition-transform cursor-pointer flex items-center justify-center relative"
+                className={`p-2 rounded-xl shadow-md hover:scale-105 transition-transform cursor-pointer flex items-center justify-center relative ${
+                  isDark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
+                }`}
                 title="Click to open Theme Drawer"
               >
                 <KeyboardIcon className="w-5 h-5 text-orange-400" />
@@ -164,15 +170,15 @@ export default function KeyboardLandingPage() {
 
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-black tracking-widest uppercase bg-gradient-to-r from-orange-600 via-rose-600 to-indigo-600 bg-clip-text text-transparent">
+                <span className="font-mono text-xs font-black tracking-widest uppercase bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-500 bg-clip-text text-transparent">
                   SETU
                 </span>
-                <span className="text-slate-300">/</span>
-                <span className="text-sm font-black text-slate-900 tracking-tight">
+                <span className={isDark ? "text-slate-600" : "text-slate-300"}>/</span>
+                <span className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
                   3D KEYBOARD
                 </span>
               </div>
-              <span className="text-[10px] text-slate-500 font-semibold">
+              <span className={`text-[10px] font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                 Web Audio • 16.0u ANSI • {currentTheme.name}
               </span>
             </div>
@@ -185,7 +191,9 @@ export default function KeyboardLandingPage() {
               onClick={() => setCurrentPage(currentPage === "speedtest" ? "home" : "speedtest")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
                 currentPage === "speedtest"
-                  ? "bg-slate-900 text-white border-slate-900 shadow-md"
+                  ? "bg-orange-500 text-white border-orange-600 shadow-md"
+                  : isDark
+                  ? "bg-slate-900/90 border-slate-700 text-slate-200 hover:bg-slate-800"
                   : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
               }`}
             >
@@ -198,18 +206,24 @@ export default function KeyboardLandingPage() {
               onClick={() => setCurrentPage(currentPage === "shortcuts" ? "home" : "shortcuts")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
                 currentPage === "shortcuts"
-                  ? "bg-slate-900 text-white border-slate-900 shadow-md"
+                  ? "bg-indigo-600 text-white border-indigo-700 shadow-md"
+                  : isDark
+                  ? "bg-slate-900/90 border-slate-700 text-slate-200 hover:bg-slate-800"
                   : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
               }`}
             >
-              <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+              <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
               <span className="hidden sm:inline">Shortcuts</span>
             </button>
 
             {/* Theme Palettes Drawer Trigger */}
             <button
               onClick={() => setIsThemeSidebarOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 hover:bg-slate-50 transition-all shadow-xs cursor-pointer"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                isDark
+                  ? "bg-slate-900/90 border-slate-700 text-slate-200 hover:bg-slate-800"
+                  : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
+              }`}
             >
               <Palette className="w-3.5 h-3.5 text-orange-500" />
               <span className="hidden md:inline">Themes</span>
@@ -221,13 +235,15 @@ export default function KeyboardLandingPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
                 colorZones
                   ? "bg-orange-500 text-white border-orange-600 shadow-[0_2px_8px_rgba(249,115,22,0.3)]"
+                  : isDark
+                  ? "bg-slate-900/90 border-slate-700 text-slate-300 hover:bg-slate-800"
                   : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
               }`}
               title="Toggle Finger Touch-Typing Color Zones"
             >
               <span
                 className={`w-2 h-2 rounded-full ${
-                  colorZones ? "bg-white animate-pulse" : "bg-slate-300"
+                  colorZones ? "bg-white animate-pulse" : "bg-slate-400"
                 }`}
               />
               <span className="hidden sm:inline">{colorZones ? "Zones ON" : "Zones OFF"}</span>
@@ -236,10 +252,14 @@ export default function KeyboardLandingPage() {
             {/* Code Snippet Button */}
             <button
               onClick={handleCopySnippet}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-xs cursor-pointer"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-xs cursor-pointer ${
+                isDark
+                  ? "bg-slate-900/90 border-slate-700 text-slate-200 hover:bg-slate-800"
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+              }`}
               title="Copy Component Usage"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
               <span className="hidden lg:inline">{copied ? "Copied" : "Code"}</span>
             </button>
           </div>
@@ -258,16 +278,20 @@ export default function KeyboardLandingPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-slate-200/90 shadow-[0_4px_20px_rgba(234,88,12,0.12)] backdrop-blur-md mb-6 hover:scale-105 transition-transform"
+              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border shadow-lg backdrop-blur-md mb-6 hover:scale-105 transition-transform ${
+                isDark
+                  ? "bg-slate-900/90 border-slate-700/80 shadow-[0_4px_20px_rgba(234,88,12,0.2)] text-white"
+                  : "bg-white/90 border-slate-200/90 shadow-[0_4px_20px_rgba(234,88,12,0.12)] text-slate-800"
+              }`}
             >
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
               </span>
-              <span className="text-xs font-black uppercase tracking-widest text-slate-800">
-                Powered by <span className="text-orange-600 font-extrabold">SETU</span>
+              <span className={`text-xs font-black uppercase tracking-widest ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                Powered by <span className="text-orange-500 font-extrabold">SETU</span>
               </span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-[10px]">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 text-[10px] border border-orange-500/30">
                 NEXT-GEN WEB 3D
               </span>
             </motion.div>
@@ -277,10 +301,12 @@ export default function KeyboardLandingPage() {
               initial={{ opacity: 0, scale: 0.9, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[0.95] text-slate-900 uppercase max-w-4xl"
+              className={`text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[0.95] uppercase max-w-4xl ${
+                isDark ? "text-white" : "text-slate-900"
+              }`}
             >
               <span className="block drop-shadow-sm">3D Mechanical</span>
-              <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-600 bg-clip-text text-transparent drop-shadow-sm">
+              <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-500 bg-clip-text text-transparent drop-shadow-sm">
                 Keyboard
               </span>
             </motion.h1>
@@ -290,7 +316,9 @@ export default function KeyboardLandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.35, ease: "easeOut" }}
-              className="mt-6 text-sm sm:text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed font-medium"
+              className={`mt-6 text-sm sm:text-base md:text-lg max-w-2xl leading-relaxed font-medium ${
+                isDark ? "text-slate-300" : "text-slate-600"
+              }`}
             >
               Zero-latency mechanical switch acoustics, adaptive per-key RGB matrices, and realistic touch-typing contact kinematics rendered in pure React & Tailwind.
             </motion.p>
@@ -304,16 +332,20 @@ export default function KeyboardLandingPage() {
             >
               <button
                 onClick={scrollToKeyboard}
-                className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-900 text-white font-bold text-sm shadow-xl hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+                className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-orange-600 text-white font-bold text-sm shadow-xl hover:bg-orange-500 hover:scale-105 active:scale-95 transition-all cursor-pointer group"
               >
-                <Play className="w-4 h-4 text-orange-400 fill-orange-400 group-hover:translate-x-0.5 transition-transform" />
+                <Play className="w-4 h-4 text-white fill-white group-hover:translate-x-0.5 transition-transform" />
                 <span>Test Drive Live</span>
                 <ArrowDown className="w-4 h-4 ml-1 opacity-70 group-hover:translate-y-0.5 transition-transform" />
               </button>
 
               <button
                 onClick={() => setCurrentPage("speedtest")}
-                className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white border border-slate-200 text-slate-800 font-bold text-sm shadow-md hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl border font-bold text-sm shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
+                  isDark
+                    ? "bg-slate-900/90 border-slate-700 text-white hover:bg-slate-800"
+                    : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
+                }`}
               >
                 <Flame className="w-4 h-4 text-orange-500" />
                 <span>Speed Typing Arena</span>
@@ -321,9 +353,13 @@ export default function KeyboardLandingPage() {
 
               <button
                 onClick={() => setIsThemeSidebarOpen(true)}
-                className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-white/80 border border-slate-200 text-slate-700 font-bold text-sm hover:bg-white transition-all cursor-pointer"
+                className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl border font-bold text-sm hover:scale-105 transition-all cursor-pointer ${
+                  isDark
+                    ? "bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800"
+                    : "bg-white/80 border-slate-200 text-slate-700 hover:bg-white"
+                }`}
               >
-                <Palette className="w-4 h-4 text-indigo-500" />
+                <Palette className="w-4 h-4 text-indigo-400" />
                 <span>Explore 8 Themes</span>
               </button>
             </motion.div>
@@ -341,7 +377,7 @@ export default function KeyboardLandingPage() {
           </div>
 
           {/* Switch Anatomy & Technical Showcase */}
-          <SwitchShowcase />
+          <SwitchShowcase theme={currentTheme} />
         </>
       )}
 
@@ -350,16 +386,18 @@ export default function KeyboardLandingPage() {
       {/* ============================================================ */}
       {currentPage === "speedtest" && (
         <section className="relative z-10 w-full max-w-5xl px-4 py-8 flex flex-col items-center gap-6 animate-in fade-in duration-300">
-          <div className="w-full flex items-center justify-between pt-4 pb-2 border-b border-slate-200/80">
+          <div className={`w-full flex items-center justify-between pt-4 pb-2 border-b ${
+            isDark ? "border-slate-800" : "border-slate-200/80"
+          }`}>
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-orange-500/10 text-orange-600">
+              <span className="p-2 rounded-xl bg-orange-500/15 text-orange-500">
                 <Flame className="w-5 h-5" />
               </span>
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
                   Speed Typing Arena
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                   Real-time accuracy calculation, words-per-minute metrics, and automatic phrase progression
                 </p>
               </div>
@@ -367,7 +405,9 @@ export default function KeyboardLandingPage() {
 
             <button
               onClick={() => setCurrentPage("home")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-xs cursor-pointer"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                isDark ? "bg-slate-800 text-white border-slate-700 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+              }`}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Studio</span>
@@ -375,27 +415,33 @@ export default function KeyboardLandingPage() {
           </div>
 
           {/* Speed Test Banner */}
-          <div className="w-full p-6 sm:p-8 bg-white border border-slate-200 rounded-3xl shadow-xl flex flex-col md:flex-row items-stretch gap-6">
+          <div className={`w-full p-6 sm:p-8 border rounded-3xl shadow-2xl flex flex-col md:flex-row items-stretch gap-6 backdrop-blur-md ${
+            isDark ? "bg-slate-900/95 border-slate-800 text-white" : "bg-white/95 border-slate-200 text-slate-900"
+          }`}>
             {/* Left / Main Typing Area */}
             <div className="flex-1 flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-orange-600 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="text-xs font-bold text-orange-500 uppercase tracking-wider flex items-center gap-1.5">
                   <Flame className="w-4 h-4" /> Live Typing Challenge
                 </span>
                 <button
                   onClick={resetSpeedTest}
-                  className="text-xs text-slate-500 hover:text-slate-900 flex items-center gap-1 transition-colors font-semibold cursor-pointer"
+                  className={`text-xs flex items-center gap-1 transition-colors font-semibold cursor-pointer ${
+                    isDark ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"
+                  }`}
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> Next Phrase
                 </button>
               </div>
 
               {/* Target phrase */}
-              <div className="text-base sm:text-lg font-medium font-mono p-5 bg-slate-50 rounded-2xl border border-slate-200 text-slate-700 tracking-wide select-none leading-relaxed">
+              <div className={`text-base sm:text-lg font-medium font-mono p-5 rounded-2xl border tracking-wide select-none leading-relaxed ${
+                isDark ? "bg-slate-950/80 border-slate-800 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"
+              }`}>
                 {targetPhrase.split("").map((char, index) => {
-                  let color = "text-slate-400";
+                  let color = isDark ? "text-slate-500" : "text-slate-400";
                   if (index < typedInput.length) {
-                    color = typedInput[index] === char ? "text-emerald-600 font-bold" : "text-rose-600 bg-rose-100 rounded px-0.5";
+                    color = typedInput[index] === char ? "text-emerald-400 font-bold" : "text-rose-400 bg-rose-500/20 rounded px-0.5";
                   }
                   return (
                     <span key={index} className={color}>
@@ -411,26 +457,30 @@ export default function KeyboardLandingPage() {
                 value={typedInput}
                 onChange={handleTestTyping}
                 placeholder="Start typing the phrase above..."
-                className="w-full p-4 bg-white border-2 border-slate-200 focus:border-orange-500 focus:outline-none rounded-2xl font-mono text-slate-800 text-sm transition-all shadow-inner"
+                className={`w-full p-4 border-2 focus:border-orange-500 focus:outline-none rounded-2xl font-mono text-sm transition-all shadow-inner ${
+                  isDark ? "bg-slate-950 border-slate-800 text-white placeholder-slate-500" : "bg-white border-slate-200 text-slate-800 placeholder-slate-400"
+                }`}
                 autoFocus
               />
             </div>
 
             {/* Right Side Vertical Metrics Panel */}
-            <div className="w-full md:w-56 flex flex-row md:flex-col items-center justify-around p-5 bg-slate-50 rounded-2xl border border-slate-200/80 gap-3">
+            <div className={`w-full md:w-56 flex flex-row md:flex-col items-center justify-around p-5 rounded-2xl border gap-3 ${
+              isDark ? "bg-slate-950/80 border-slate-800" : "bg-slate-50 border-slate-200/80"
+            }`}>
               <div className="text-center w-full">
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">WPM Speed</span>
-                <span className="text-3xl font-black font-mono text-orange-600 block">{wpm !== null ? `${wpm}` : "--"}</span>
+                <span className="text-3xl font-black font-mono text-orange-500 block">{wpm !== null ? `${wpm}` : "--"}</span>
               </div>
-              <div className="w-[1px] md:w-full h-8 md:h-[1px] bg-slate-200" />
+              <div className={`w-[1px] md:w-full h-8 md:h-[1px] ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
               <div className="text-center w-full">
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Accuracy</span>
-                <span className={`text-3xl font-black font-mono block ${accuracy > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>{accuracy}%</span>
+                <span className={`text-3xl font-black font-mono block ${accuracy > 90 ? 'text-emerald-400' : 'text-amber-400'}`}>{accuracy}%</span>
               </div>
-              <div className="w-[1px] md:w-full h-8 md:h-[1px] bg-slate-200" />
+              <div className={`w-[1px] md:w-full h-8 md:h-[1px] ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
               <div className="text-center w-full">
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Status</span>
-                <span className="text-xs font-black font-mono text-indigo-600 block truncate">{typedInput === targetPhrase ? "COMPLETED! 🎉" : "TYPING..."}</span>
+                <span className="text-xs font-black font-mono text-indigo-400 block truncate">{typedInput === targetPhrase ? "COMPLETED! 🎉" : "TYPING..."}</span>
               </div>
             </div>
           </div>
@@ -453,16 +503,18 @@ export default function KeyboardLandingPage() {
       {/* ============================================================ */}
       {currentPage === "shortcuts" && (
         <section className="relative z-10 w-full max-w-5xl px-4 py-8 flex flex-col items-center gap-6 animate-in fade-in duration-300">
-          <div className="w-full flex items-center justify-between pt-4 pb-2 border-b border-slate-200/80">
+          <div className={`w-full flex items-center justify-between pt-4 pb-2 border-b ${
+            isDark ? "border-slate-800" : "border-slate-200/80"
+          }`}>
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600">
+              <span className="p-2 rounded-xl bg-indigo-500/15 text-indigo-400">
                 <Sparkles className="w-5 h-5" />
               </span>
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
                   Keyboard Shortcuts Guide
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                   Comprehensive standard shortcut reference matrix for power users & developers
                 </p>
               </div>
@@ -470,14 +522,18 @@ export default function KeyboardLandingPage() {
 
             <button
               onClick={() => setCurrentPage("home")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-xs cursor-pointer"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                isDark ? "bg-slate-800 text-white border-slate-700 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+              }`}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Studio</span>
             </button>
           </div>
 
-          <div className="w-full p-6 sm:p-8 bg-white border border-slate-200 rounded-3xl shadow-xl flex flex-col gap-6">
+          <div className={`w-full p-6 sm:p-8 border rounded-3xl shadow-2xl flex flex-col gap-6 backdrop-blur-md ${
+            isDark ? "bg-slate-900/95 border-slate-800 text-white" : "bg-white/95 border-slate-200 text-slate-900"
+          }`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
               {[
                 { key: "Ctrl + C", desc: "Copy Selection" },
@@ -490,11 +546,15 @@ export default function KeyboardLandingPage() {
                 { key: "Ctrl + A", desc: "Select All" },
                 { key: "Ctrl + Shift + T", desc: "Reopen Closed Tab" },
               ].map((sc, i) => (
-                <div key={i} className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors">
-                  <span className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 font-mono text-xs font-bold text-slate-800 shadow-xs">
+                <div key={i} className={`flex items-center justify-between p-3.5 rounded-2xl border transition-colors ${
+                  isDark ? "bg-slate-950/80 border-slate-800 hover:border-slate-700 text-slate-200" : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-800"
+                }`}>
+                  <span className={`px-3 py-1.5 rounded-xl border font-mono text-xs font-bold shadow-xs ${
+                    isDark ? "bg-slate-900 border-slate-700 text-cyan-400" : "bg-white border-slate-300 text-slate-800"
+                  }`}>
                     {sc.key}
                   </span>
-                  <span className="text-xs font-semibold text-slate-600">{sc.desc}</span>
+                  <span className={`text-xs font-semibold ${isDark ? "text-slate-300" : "text-slate-600"}`}>{sc.desc}</span>
                 </div>
               ))}
             </div>
