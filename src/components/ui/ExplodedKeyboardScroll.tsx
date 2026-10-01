@@ -85,6 +85,8 @@ export function ExplodedKeyboardScroll({
     stageBadge = "Stage 3 • Assembling";
   }
 
+  const isDark = theme?.isDark || theme?.category === "Dark";
+
   return (
     <div
       ref={containerRef}
@@ -102,19 +104,23 @@ export function ExplodedKeyboardScroll({
           }}
           className="absolute top-16 sm:top-20 z-30 flex flex-col items-center gap-1.5"
         >
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 border border-slate-200 shadow-md backdrop-blur-md">
+          <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border shadow-md backdrop-blur-md ${
+            isDark ? "bg-slate-900/95 border-slate-700 text-white" : "bg-white/95 border-slate-200 text-slate-800"
+          }`}>
             <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
-            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-800">
+            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest">
               {stageBadge}
             </span>
-            <span className="text-slate-300">|</span>
-            <span className="text-xs font-bold text-slate-600">
+            <span className={isDark ? "text-slate-600" : "text-slate-300"}>|</span>
+            <span className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}>
               {stageTitle}
             </span>
           </div>
 
           {/* Progress Bar Track */}
-          <div className="w-52 h-1.5 bg-slate-200/80 rounded-full overflow-hidden shadow-inner">
+          <div className={`w-52 h-1.5 rounded-full overflow-hidden shadow-inner ${
+            isDark ? "bg-slate-800" : "bg-slate-200/80"
+          }`}>
             <div
               className="h-full bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-600 transition-all duration-75"
               style={{ width: `${Math.min(100, Math.max(0, progressVal * 100))}%` }}
@@ -133,12 +139,25 @@ export function ExplodedKeyboardScroll({
           }}
           className="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 pb-2 px-4 mb-2 z-30"
         >
-          <div className="flex items-center gap-2.5 flex-wrap justify-center">
-            <span className="text-xs sm:text-sm font-bold tracking-wider opacity-85 uppercase flex items-center gap-2 text-slate-900">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              Test your keyboard here
+          <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl border backdrop-blur-xl shadow-lg transition-all ${
+            isDark
+              ? "bg-slate-900/90 border-slate-700/80 text-white shadow-black/40"
+              : "bg-white/95 border-slate-200/90 text-slate-900 shadow-slate-200/50"
+          }`}>
+            <span className="flex items-center gap-2 text-xs sm:text-sm font-black tracking-wider uppercase">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+              </span>
+              <span className={isDark ? "text-white font-extrabold" : "text-slate-900 font-extrabold"}>
+                Test your keyboard here
+              </span>
             </span>
-            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 border border-emerald-500/30">
+            <span className={`text-xs font-mono font-black px-3 py-1 rounded-full border shadow-xs ${
+              isDark
+                ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/40"
+                : "bg-emerald-100 text-emerald-800 border-emerald-300"
+            }`}>
               {testedKeys.size} / 68 Keys Tested
             </span>
           </div>
@@ -146,10 +165,14 @@ export function ExplodedKeyboardScroll({
           {testedKeys.size > 0 && (
             <button
               onClick={() => onTestedKeysChange(new Set())}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:text-orange-600 hover:bg-slate-50 transition-all shadow-md cursor-pointer"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-2xl border text-xs font-bold transition-all shadow-lg hover:scale-105 cursor-pointer ${
+                isDark
+                  ? "bg-slate-900/90 border-slate-700 text-slate-100 hover:bg-slate-800 hover:text-orange-400 shadow-black/40"
+                  : "bg-white/95 border-slate-200 text-slate-700 hover:text-orange-600 hover:bg-slate-50 shadow-slate-200/50"
+              }`}
             >
               <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
-              <span>Reset Key Test</span>
+              <span>Reset Key Test ({testedKeys.size})</span>
             </button>
           )}
         </motion.div>
@@ -319,19 +342,27 @@ export function ExplodedKeyboardScroll({
               style={{ opacity: annotationsOpacity }}
               className="absolute -right-4 sm:-right-8 top-1/4 flex flex-col gap-2.5 pointer-events-none z-50 hidden md:flex"
             >
-              <div className="px-3 py-1.5 rounded-xl bg-white/95 border border-orange-200 shadow-lg backdrop-blur-md flex items-center gap-2 text-xs font-bold text-slate-800">
+              <div className={`px-3 py-1.5 rounded-xl border shadow-lg backdrop-blur-md flex items-center gap-2 text-xs font-bold ${
+                isDark ? "bg-slate-900/95 border-orange-500/40 text-white" : "bg-white/95 border-orange-200 text-slate-800"
+              }`}>
                 <span className="w-2 h-2 rounded-full bg-orange-500" />
                 <span>PBT Keycap Tops</span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-white/95 border border-rose-200 shadow-lg backdrop-blur-md flex items-center gap-2 text-xs font-bold text-slate-800">
+              <div className={`px-3 py-1.5 rounded-xl border shadow-lg backdrop-blur-md flex items-center gap-2 text-xs font-bold ${
+                isDark ? "bg-slate-900/95 border-rose-500/40 text-white" : "bg-white/95 border-rose-200 text-slate-800"
+              }`}>
                 <span className="w-2 h-2 rounded-full bg-rose-500" />
                 <span>55g Tactile Stems</span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-white/95 border border-cyan-200 shadow-lg backdrop-blur-md flex items-center gap-2 text-xs font-bold text-slate-800">
+              <div className={`px-3 py-1.5 rounded-xl border shadow-lg backdrop-blur-md flex items-center gap-2 text-xs font-bold ${
+                isDark ? "bg-slate-900/95 border-cyan-500/40 text-white" : "bg-white/95 border-cyan-200 text-slate-800"
+              }`}>
                 <span className="w-2 h-2 rounded-full bg-cyan-500" />
                 <span>Hot-Swap RGB PCB</span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-white/95 border border-indigo-200 shadow-lg backdrop-blur-md flex items-center gap-2 text-xs font-bold text-slate-800">
+              <div className={`px-3 py-1.5 rounded-xl border shadow-lg backdrop-blur-md flex items-center gap-2 text-xs font-bold ${
+                isDark ? "bg-slate-900/95 border-indigo-500/40 text-white" : "bg-white/95 border-indigo-200 text-slate-800"
+              }`}>
                 <span className="w-2 h-2 rounded-full bg-indigo-500" />
                 <span>Solid Base Chassis</span>
               </div>
@@ -344,21 +375,23 @@ export function ExplodedKeyboardScroll({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="absolute bottom-5 flex items-center gap-2 text-xs font-bold bg-white/95 px-4 py-2 rounded-full border border-slate-200 shadow-md backdrop-blur-sm pointer-events-none"
+          className={`absolute bottom-5 flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-full border shadow-lg backdrop-blur-md pointer-events-none ${
+            isDark ? "bg-slate-900/95 border-slate-700 text-slate-200" : "bg-white/95 border-slate-200 text-slate-700"
+          }`}
         >
           {!isFullyAssembled ? (
             <>
-              <span className="text-slate-600">Scroll down to explore 3D exploded view</span>
+              <span className={isDark ? "text-slate-300" : "text-slate-600"}>Scroll down to explore 3D exploded view</span>
               <ArrowDown className="w-3.5 h-3.5 text-orange-500 animate-bounce" />
             </>
           ) : (
             <>
-              <span className="text-emerald-700 font-extrabold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-emerald-400 font-extrabold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 Assembly complete!
               </span>
-              <span className="text-slate-500">Test keys above or scroll down to continue</span>
-              <ArrowDown className="w-3.5 h-3.5 text-slate-400 animate-bounce" />
+              <span className={isDark ? "text-slate-400" : "text-slate-500"}>Test keys above or scroll down to continue</span>
+              <ArrowDown className={`w-3.5 h-3.5 animate-bounce ${isDark ? "text-slate-400" : "text-slate-500"}`} />
             </>
           )}
         </motion.div>
