@@ -15,6 +15,7 @@ import {
   Gamepad2,
   ShieldCheck,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 
 export type GameId = "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts";
@@ -30,6 +31,8 @@ export interface GameCardInfo {
   gradient: string;
   metrics: string[];
   buttonText: string;
+  locked?: boolean;
+  lockedLabel?: string;
 }
 
 const ARCADE_GAMES: GameCardInfo[] = [
@@ -91,7 +94,9 @@ const ARCADE_GAMES: GameCardInfo[] = [
     badgeColor: "bg-purple-500 text-white",
     gradient: "from-purple-500/20 via-indigo-500/10 to-transparent",
     metrics: ["Voice Dictation", "Spell & 'Space'", "Read Full Words", "Paced Speeds"],
-    buttonText: "PLAY ECHO MATRIX",
+    buttonText: "AVAILABLE SOON",
+    locked: true,
+    lockedLabel: "Available Soon",
   },
   {
     id: "shortcuts",
@@ -234,17 +239,26 @@ export function GamesHub({
       <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-5">
         {ARCADE_GAMES.slice(1).map((game) => {
           const Icon = game.icon;
+          const isLocked = Boolean(game.locked);
 
           return (
             <motion.div
               key={game.id}
-              whileHover={{ y: -3 }}
+              whileHover={isLocked ? {} : { y: -3 }}
               transition={{ duration: 0.2 }}
-              onClick={() => onSelectGame(game.id)}
-              className={`p-6 rounded-3xl border transition-all cursor-pointer flex flex-col justify-between gap-5 group shadow-xl ${
-                isDark
-                  ? "bg-slate-900/90 border-slate-800 hover:border-slate-700 text-white shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
-                  : "bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
+              onClick={() => {
+                if (!isLocked) {
+                  onSelectGame(game.id);
+                }
+              }}
+              className={`p-6 rounded-3xl border transition-all flex flex-col justify-between gap-5 group shadow-xl relative overflow-hidden ${
+                isLocked
+                  ? isDark
+                    ? "bg-slate-900/60 border-slate-800 text-slate-400 opacity-85 cursor-not-allowed"
+                    : "bg-slate-50/80 border-slate-200 text-slate-500 opacity-85 cursor-not-allowed"
+                  : isDark
+                  ? "bg-slate-900/90 border-slate-800 hover:border-slate-700 text-white shadow-[0_8px_24px_rgba(0,0,0,0.3)] cursor-pointer"
+                  : "bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-[0_8px_24px_rgba(0,0,0,0.04)] cursor-pointer"
               }`}
             >
               <div className="flex flex-col gap-3">
@@ -253,18 +267,36 @@ export function GamesHub({
                     <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${game.badgeColor}`}>
                       {game.category}
                     </span>
+                    {isLocked && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        <Lock className="w-3 h-3" />
+                        <span>Available Soon</span>
+                      </span>
+                    )}
                   </div>
-                  <Icon className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors" />
+                  {isLocked ? (
+                    <Lock className="w-5 h-5 text-amber-500/70" />
+                  ) : (
+                    <Icon className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors" />
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className={`p-3 rounded-2xl border ${
-                    isDark ? "bg-slate-950 border-slate-800 text-orange-400" : "bg-slate-50 border-slate-200 text-orange-600"
-                  } group-hover:scale-110 transition-transform`}>
+                    isLocked
+                      ? isDark
+                        ? "bg-slate-950 border-slate-800 text-slate-500"
+                        : "bg-slate-100 border-slate-200 text-slate-400"
+                      : isDark
+                      ? "bg-slate-950 border-slate-800 text-orange-400 group-hover:scale-110"
+                      : "bg-slate-50 border-slate-200 text-orange-600 group-hover:scale-110"
+                  } transition-transform`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black tracking-tight">{game.title}</h3>
+                    <h3 className={`text-lg font-black tracking-tight ${isLocked ? (isDark ? "text-slate-300" : "text-slate-700") : ""}`}>
+                      {game.title}
+                    </h3>
                     <p className="text-xs text-slate-400 font-semibold">{game.tagline}</p>
                   </div>
                 </div>
@@ -292,18 +324,34 @@ export function GamesHub({
 
               <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/80">
                 <button
+                  disabled={isLocked}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSelectGame(game.id);
+                    if (!isLocked) {
+                      onSelectGame(game.id);
+                    }
                   }}
-                  className={`w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide uppercase flex items-center justify-center gap-2 transition-all cursor-pointer border ${
-                    isDark
-                      ? "bg-slate-800/90 border-slate-700 hover:bg-slate-700 text-white"
-                      : "bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-800"
+                  className={`w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide uppercase flex items-center justify-center gap-2 transition-all border ${
+                    isLocked
+                      ? isDark
+                        ? "bg-slate-950/90 border-slate-800 text-slate-500 cursor-not-allowed opacity-90"
+                        : "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-90"
+                      : isDark
+                      ? "bg-slate-800/90 border-slate-700 hover:bg-slate-700 text-white cursor-pointer"
+                      : "bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-800 cursor-pointer"
                   }`}
                 >
-                  <span>{game.buttonText}</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  {isLocked ? (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-amber-500" />
+                      <span className="text-amber-500/90">AVAILABLE SOON</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{game.buttonText}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
