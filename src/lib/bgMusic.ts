@@ -26,6 +26,12 @@ export const PLAYLIST: Track[] = [
     src: "/Afternoon_on_the_Sill.mp3",
     durationApprox: "3:00",
   },
+  {
+    id: "notes_glass",
+    title: "Notes on the Glass",
+    src: "/Notes_on_the_Glass.mp3",
+    durationApprox: "3:00",
+  },
 ];
 
 class BackgroundMusicEngine {

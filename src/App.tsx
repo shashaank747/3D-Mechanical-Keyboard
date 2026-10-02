@@ -120,10 +120,12 @@ export default function KeyboardLandingPage() {
     return () => window.removeEventListener("keydown", handleShortcutsKeyDown, { capture: true });
   }, [currentPage]);
 
-  // Auto-play chill BGM ("Sunlight on the Desk") whenever playing a game
+  // Auto-play chill BGM only when user is in the "Let's Play" / games views, and pause on home
   useEffect(() => {
     if (currentPage !== "home") {
       bgMusic.play();
+    } else {
+      bgMusic.pause();
     }
   }, [currentPage]);
 
@@ -270,9 +272,9 @@ export default function KeyboardLandingPage() {
             </div>
           </div>
 
-          {/* Right Side: Chill Vibe BGM Player Widget */}
+          {/* Right Side: Chill Vibe BGM Player Widget (Shown in Let's Play & Game Pages) */}
           <div className="flex items-center gap-3">
-            <MusicPlayer isDark={isDark} />
+            {currentPage !== "home" && <MusicPlayer isDark={isDark} />}
           </div>
         </div>
       </header>
