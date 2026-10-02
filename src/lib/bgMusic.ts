@@ -20,6 +20,12 @@ export const PLAYLIST: Track[] = [
     src: "/Steaming_Mug_Grey_Skies.mp3",
     durationApprox: "3:00",
   },
+  {
+    id: "afternoon_sill",
+    title: "Afternoon on the Sill",
+    src: "/Afternoon_on_the_Sill.mp3",
+    durationApprox: "3:00",
+  },
 ];
 
 class BackgroundMusicEngine {
