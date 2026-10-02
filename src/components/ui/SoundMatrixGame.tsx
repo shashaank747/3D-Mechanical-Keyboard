@@ -18,7 +18,6 @@ import {
   Headphones,
   CheckCircle2,
   Settings2,
-  Sliders,
   Type,
   BookOpen,
   ArrowRight,
@@ -40,13 +39,13 @@ const PRACTICE_LINES: PracticeLine[] = [
   {
     id: 1,
     category: "Beginner",
-    text: "type fast with rhythm and flow",
+    text: "home row keys anchor your fingers",
     difficulty: "Easy",
   },
   {
     id: 2,
     category: "Beginner",
-    text: "home row keys anchor your fingers",
+    text: "type fast with rhythm and flow",
     difficulty: "Easy",
   },
   {
@@ -104,6 +103,9 @@ function charToKeyCode(char: string): string {
   return "";
 }
 
+// Global active utterance array to prevent browser GC bug
+const activeUtteranceQueue: SpeechSynthesisUtterance[] = [];
+
 export function SoundMatrixGame({
   theme,
   colorZones,
@@ -119,16 +121,15 @@ export function SoundMatrixGame({
 
   // Game Settings
   const [dictationMode, setDictationMode] = useState<DictationMode>("spell"); // 'spell' or 'words'
-  const [speechRate, setSpeechRate] = useState<number>(0.9); // 0.6 to 1.4
-  const [speechPitch, setSpeechPitch] = useState<number>(1.0);
+  const [speechRate, setSpeechRate] = useState<number>(0.85); // Paced dictation cadence
   const [isVoiceMuted, setIsVoiceMuted] = useState<boolean>(false);
   const [selectedLineIndex, setSelectedLineIndex] = useState<number>(0);
 
   // Active Session State
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTypedText, setCurrentTypedText] = useState<string>("");
-  const [speakingIndex, setSpeakingIndex] = useState<number>(0);
-  const [speakingWordIndex, setSpeakingWordIndex] = useState<number>(0);
+  const [speakingIndex, setSpeakingIndex] = useState<number>(-1);
+  const [speakingWordIndex, setSpeakingWordIndex] = useState<number>(-1);
   const [streak, setStreak] = useState<number>(0);
   const [maxStreak, setMaxStreak] = useState<number>(0);
   const [mistakes, setMistakes] = useState<number>(0);
@@ -141,146 +142,205 @@ export function SoundMatrixGame({
   const currentTargetChar = targetText[currentTypedText.length] || "";
   const targetKeyCode = charToKeyCode(currentTargetChar);
 
-  const synthRef = useRef<SpeechSynthesis | null>(null);
-  const isSpeakingRef = useRef<boolean>(false);
-  const speechTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // References for continuous speech loop
+  const isPlayingRef = useRef<boolean>(false);
+  const speakingIndexRef = useRef<number>(-1);
+  const targetTextRef = useRef<string>(targetText);
+  const dictationModeRef = useRef<DictationMode>(dictationMode);
+  const speechRateRef = useRef<number>(speechRate);
+  const isVoiceMutedRef = useRef<boolean>(isVoiceMuted);
+  const stepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      synthRef.current = window.speechSynthesis;
+    targetTextRef.current = targetText;
+  }, [targetText]);
+
+  useEffect(() => {
+    dictationModeRef.current = dictationMode;
+  }, [dictationMode]);
+
+  useEffect(() => {
+    speechRateRef.current = speechRate;
+  }, [speechRate]);
+
+  useEffect(() => {
+    isVoiceMutedRef.current = isVoiceMuted;
+  }, [isVoiceMuted]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  const cancelSpeech = () => {
+    if (stepTimerRef.current) {
+      clearTimeout(stepTimerRef.current);
+      stepTimerRef.current = null;
     }
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    activeUtteranceQueue.length = 0;
+  };
+
+  useEffect(() => {
     return () => {
-      stopSpeaking();
+      cancelSpeech();
     };
   }, []);
 
-  const stopSpeaking = () => {
-    if (speechTimerRef.current) {
-      clearTimeout(speechTimerRef.current);
-      speechTimerRef.current = null;
-    }
-    if (synthRef.current) {
-      synthRef.current.cancel();
-    }
-    isSpeakingRef.current = false;
-  };
+  // Continuous loop that moves forward through the entire line regardless of user typing
+  const runContinuousStep = useCallback(() => {
+    if (!isPlayingRef.current) return;
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
-  // Pronounce character or word cleanly
-  const speakToken = useCallback((textToSpeak: string, onEnd?: () => void) => {
-    if (isVoiceMuted || !synthRef.current) {
-      onEnd?.();
-      return;
-    }
+    const currentMode = dictationModeRef.current;
+    const fullText = targetTextRef.current;
 
-    try {
-      synthRef.current.cancel(); // cancel any active queue for immediate clear audio
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.rate = speechRate;
-      utterance.pitch = speechPitch;
-      utterance.lang = "en-US";
+    if (currentMode === "spell") {
+      // Advance to next letter
+      const nextIdx = speakingIndexRef.current + 1;
 
-      utterance.onend = () => {
-        onEnd?.();
-      };
-      utterance.onerror = () => {
-        onEnd?.();
-      };
-
-      synthRef.current.speak(utterance);
-    } catch {
-      onEnd?.();
-    }
-  }, [isVoiceMuted, speechPitch, speechRate]);
-
-  // Continuous speech loop depending on mode
-  const triggerNextDictation = useCallback((index: number) => {
-    if (!isPlaying) return;
-
-    if (dictationMode === "spell") {
-      if (index >= targetText.length) return;
-
-      setSpeakingIndex(index);
-      const char = targetText[index];
-      let spokenRepresentation = char.toUpperCase();
-      if (char === " ") {
-        spokenRepresentation = "Space";
-      } else if (char === ".") {
-        spokenRepresentation = "Period";
-      } else if (char === ",") {
-        spokenRepresentation = "Comma";
+      if (nextIdx >= fullText.length) {
+        // Line reached end of dictation: wait a moment and re-loop if user is still typing
+        speakingIndexRef.current = -1;
+        setSpeakingIndex(-1);
+        stepTimerRef.current = setTimeout(() => {
+          if (isPlayingRef.current) {
+            runContinuousStep();
+          }
+        }, 1500);
+        return;
       }
 
-      speakToken(spokenRepresentation, () => {
-        if (!isPlaying) return;
-        // Paced interval to next letter
-        const delay = Math.max(350, Math.round(750 / speechRate));
-        speechTimerRef.current = setTimeout(() => {
-          triggerNextDictation(index + 1);
-        }, delay);
-      });
+      speakingIndexRef.current = nextIdx;
+      setSpeakingIndex(nextIdx);
+
+      const char = fullText[nextIdx];
+      let spokenText = char.toUpperCase();
+      if (char === " ") {
+        spokenText = "Space";
+      } else if (char === ".") {
+        spokenText = "Period";
+      } else if (char === ",") {
+        spokenText = "Comma";
+      }
+
+      if (!isVoiceMutedRef.current) {
+        const u = new SpeechSynthesisUtterance(spokenText);
+        u.rate = Math.max(0.7, speechRateRef.current * 1.1);
+        u.pitch = 1.0;
+        u.lang = "en-US";
+
+        activeUtteranceQueue.push(u);
+
+        const onFinished = () => {
+          const idx = activeUtteranceQueue.indexOf(u);
+          if (idx !== -1) activeUtteranceQueue.splice(idx, 1);
+        };
+
+        u.onend = onFinished;
+        u.onerror = onFinished;
+
+        window.speechSynthesis.speak(u);
+      }
+
+      // Time gap to next letter continuously (e.g. 750ms / speed rate)
+      const letterInterval = Math.max(380, Math.round(720 / speechRateRef.current));
+      stepTimerRef.current = setTimeout(() => {
+        if (isPlayingRef.current) {
+          runContinuousStep();
+        }
+      }, letterInterval);
     } else {
-      // Word by word dictation mode
-      const words = targetText.split(" ");
-      if (index >= words.length) return;
+      // Word by word continuous mode
+      const words = fullText.split(" ");
+      const nextWordIdx = (speakingIndexRef.current + 1);
 
-      setSpeakingWordIndex(index);
-      const word = words[index];
-      const spokenText = index < words.length - 1 ? `${word}, space` : word;
+      if (nextWordIdx >= words.length) {
+        speakingIndexRef.current = -1;
+        setSpeakingWordIndex(-1);
+        stepTimerRef.current = setTimeout(() => {
+          if (isPlayingRef.current) {
+            runContinuousStep();
+          }
+        }, 1800);
+        return;
+      }
 
-      speakToken(spokenText, () => {
-        if (!isPlaying) return;
-        const delay = Math.max(600, Math.round(1200 / speechRate));
-        speechTimerRef.current = setTimeout(() => {
-          triggerNextDictation(index + 1);
-        }, delay);
-      });
+      speakingIndexRef.current = nextWordIdx;
+      setSpeakingWordIndex(nextWordIdx);
+
+      const word = words[nextWordIdx];
+      const isLastWord = nextWordIdx === words.length - 1;
+      const spokenText = isLastWord ? word : `${word}, space`;
+
+      if (!isVoiceMutedRef.current) {
+        const u = new SpeechSynthesisUtterance(spokenText);
+        u.rate = speechRateRef.current;
+        u.pitch = 1.0;
+        u.lang = "en-US";
+
+        activeUtteranceQueue.push(u);
+
+        const onFinished = () => {
+          const idx = activeUtteranceQueue.indexOf(u);
+          if (idx !== -1) activeUtteranceQueue.splice(idx, 1);
+        };
+
+        u.onend = onFinished;
+        u.onerror = onFinished;
+
+        window.speechSynthesis.speak(u);
+      }
+
+      const wordInterval = Math.max(700, Math.round(1350 / speechRateRef.current));
+      stepTimerRef.current = setTimeout(() => {
+        if (isPlayingRef.current) {
+          runContinuousStep();
+        }
+      }, wordInterval);
     }
-  }, [dictationMode, isPlaying, speakToken, speechRate, targetText]);
+  }, []);
 
-  // Start / Resume Dictation
+  // Start / Resume Continuous Voice Dictation
   const startSession = () => {
+    cancelSpeech();
     setIsPlaying(true);
-    setStartTime(Date.now());
-    if (dictationMode === "spell") {
-      triggerNextDictation(currentTypedText.length);
-    } else {
-      const currentWordIdx = currentTypedText.split(" ").length - 1;
-      triggerNextDictation(currentWordIdx);
-    }
+    isPlayingRef.current = true;
+    speakingIndexRef.current = -1;
+    setSpeakingIndex(-1);
+    setSpeakingWordIndex(-1);
+    if (!startTime) setStartTime(Date.now());
+
+    // Begin continuous loop
+    setTimeout(() => {
+      runContinuousStep();
+    }, 150);
   };
 
   const pauseSession = () => {
     setIsPlaying(false);
-    stopSpeaking();
+    isPlayingRef.current = false;
+    cancelSpeech();
   };
 
   const restartSession = () => {
-    stopSpeaking();
+    cancelSpeech();
+    setIsPlaying(false);
+    isPlayingRef.current = false;
     setCurrentTypedText("");
-    setSpeakingIndex(0);
-    setSpeakingWordIndex(0);
+    speakingIndexRef.current = -1;
+    setSpeakingIndex(-1);
+    setSpeakingWordIndex(-1);
     setStreak(0);
     setMistakes(0);
     setStartTime(null);
     setShowCompleteModal(false);
-    setIsPlaying(false);
   };
 
-  // Re-read current character or word on demand
-  const repeatCurrentPrompt = () => {
-    if (dictationMode === "spell") {
-      const char = targetText[currentTypedText.length];
-      if (char) {
-        speakToken(char === " " ? "Space" : char.toUpperCase());
-      }
-    } else {
-      const words = targetText.split(" ");
-      const currentWordIdx = currentTypedText.split(" ").length - 1;
-      const word = words[currentWordIdx];
-      if (word) {
-        speakToken(word);
-      }
-    }
+  // Replay current line from start
+  const replayFromStart = () => {
+    startSession();
   };
 
   // Handle typing input
@@ -307,8 +367,9 @@ export function SoundMatrixGame({
 
       // Check if finished
       if (nextTyped === targetText) {
-        stopSpeaking();
+        cancelSpeech();
         setIsPlaying(false);
+        isPlayingRef.current = false;
         setShowCompleteModal(true);
         try {
           confetti({
@@ -317,11 +378,6 @@ export function SoundMatrixGame({
             origin: { y: 0.55 },
           });
         } catch {}
-      } else {
-        // If continuous voice was running in spelling mode, optionally sync spoken index
-        if (isPlaying && dictationMode === "spell") {
-          setSpeakingIndex(nextTyped.length);
-        }
       }
     } else {
       // Wrong character hit
@@ -331,7 +387,7 @@ export function SoundMatrixGame({
       setShakeWrong(true);
       setTimeout(() => setShakeWrong(false), 300);
     }
-  }, [currentTypedText, dictationMode, isPlaying, maxStreak, showCompleteModal, startTime, targetText]);
+  }, [currentTypedText, maxStreak, showCompleteModal, startTime, targetText]);
 
   // Global physical keyboard listener
   useEffect(() => {
@@ -362,6 +418,10 @@ export function SoundMatrixGame({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentTypedText, processKey, showCompleteModal]);
 
+  // Break text into organized words for clean responsive layout
+  const wordsList = targetText.split(" ");
+  let charGlobalCounter = 0;
+
   // Metrics
   const totalTyped = currentTypedText.length + mistakes;
   const accuracy = totalTyped > 0 ? Math.round((currentTypedText.length / totalTyped) * 100) : 100;
@@ -376,7 +436,7 @@ export function SoundMatrixGame({
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              stopSpeaking();
+              cancelSpeech();
               onBackToHub();
             }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black transition-all shadow-2xs cursor-pointer ${
@@ -412,7 +472,7 @@ export function SoundMatrixGame({
       </div>
 
       {/* Voice Control & Dictation Mode Switcher Toolbar */}
-      <div className={`w-full p-3.5 sm:p-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-3 shadow-md backdrop-blur-md ${
+      <div className={`w-full p-3 sm:p-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-3 shadow-md backdrop-blur-md ${
         isDark ? "bg-slate-900/90 border-slate-800 text-white" : "bg-white/90 border-slate-200 text-slate-900"
       }`}>
         {/* Left: Mode Selection (Spell Letters vs Read Words) */}
@@ -421,8 +481,11 @@ export function SoundMatrixGame({
           <div className="flex items-center p-1 rounded-xl bg-slate-200 dark:bg-slate-950 border border-slate-300 dark:border-slate-800">
             <button
               onClick={() => {
-                stopSpeaking();
+                cancelSpeech();
                 setDictationMode("spell");
+                if (isPlaying) {
+                  setTimeout(() => startSession(), 100);
+                }
               }}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 dictationMode === "spell"
@@ -436,8 +499,11 @@ export function SoundMatrixGame({
 
             <button
               onClick={() => {
-                stopSpeaking();
+                cancelSpeech();
                 setDictationMode("words");
+                if (isPlaying) {
+                  setTimeout(() => startSession(), 100);
+                }
               }}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 dictationMode === "words"
@@ -459,7 +525,7 @@ export function SoundMatrixGame({
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-md shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
-              <span>Start Voice Dictation</span>
+              <span>Start Continuous Reading</span>
             </button>
           ) : (
             <button
@@ -467,26 +533,16 @@ export function SoundMatrixGame({
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <Pause className="w-3.5 h-3.5 fill-white" />
-              <span>Pause Voice</span>
+              <span>Pause Continuous Reading</span>
             </button>
           )}
 
           <button
-            onClick={repeatCurrentPrompt}
+            onClick={replayFromStart}
             className={`p-2 rounded-xl border transition-all cursor-pointer ${
               isDark ? "bg-slate-800 border-slate-700 hover:bg-slate-700 text-cyan-400" : "bg-slate-100 border-slate-300 hover:bg-slate-200 text-cyan-600"
             }`}
-            title="Repeat Current Spoken Prompt"
-          >
-            <Volume2 className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={restartSession}
-            className={`p-2 rounded-xl border transition-all cursor-pointer ${
-              isDark ? "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300" : "bg-slate-100 border-slate-300 hover:bg-slate-200 text-slate-700"
-            }`}
-            title="Restart Line"
+            title="Replay Voice From Start"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -497,7 +553,7 @@ export function SoundMatrixGame({
           {/* Speed Selector */}
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] font-bold text-slate-400 uppercase">Speed:</span>
-            {[0.7, 0.9, 1.2].map((rate) => (
+            {[0.7, 0.85, 1.1].map((rate) => (
               <button
                 key={rate}
                 onClick={() => setSpeechRate(rate)}
@@ -544,7 +600,7 @@ export function SoundMatrixGame({
       </div>
 
       {/* Main Dictation Reading & Interactive Typing Line Display */}
-      <div className={`w-full p-6 sm:p-8 rounded-3xl border shadow-xl flex flex-col items-center justify-center gap-4 text-center transition-all ${
+      <div className={`w-full p-5 sm:p-7 rounded-3xl border shadow-xl flex flex-col items-center justify-center gap-3 text-center transition-all ${
         shakeWrong ? "animate-shake" : ""
       } ${
         isDark
@@ -559,63 +615,129 @@ export function SoundMatrixGame({
           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-400 border border-slate-700/50">
             {activeLine.difficulty}
           </span>
-          {isPlaying && (
+          {isPlaying ? (
             <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 animate-pulse">
-              <Volume2 className="w-3 h-3" />
-              <span>Voice Reading Active</span>
+              <Volume2 className="w-3.5 h-3.5" />
+              <span>Voice Dictating Continuously...</span>
+            </span>
+          ) : (
+            <span className="text-[10px] text-slate-400 italic">
+              (Click 'Start Continuous Reading' to listen & type)
             </span>
           )}
         </div>
 
-        {/* Giant Kinetic Interactive Text Stream */}
-        <div className="text-2xl sm:text-3xl md:text-4xl font-mono font-black tracking-wider leading-relaxed flex flex-wrap items-center justify-center gap-y-2 select-none">
-          {targetText.split("").map((char, idx) => {
-            const isTyped = idx < currentTypedText.length;
-            const isCurrent = idx === currentTypedText.length;
-            const isSpoken = dictationMode === "spell" && idx === speakingIndex && isPlaying;
-            const isSpace = char === " ";
+        {/* Clean, Word-Grouped Kinetic Text Stream */}
+        <div className="w-full flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-4 gap-y-3 p-2 font-mono font-black text-2xl sm:text-3xl select-none">
+          {(() => {
+            let globalCharIdx = 0;
+            return wordsList.map((word, wIdx) => {
+              const wordStartIdx = globalCharIdx;
+              const wordChars = word.split("");
+              const isCurrentWordSpoken = dictationMode === "words" && speakingWordIndex === wIdx && isPlaying;
 
-            return (
-              <span
-                key={idx}
-                className={`relative px-1 py-0.5 rounded-md transition-all duration-150 ${
-                  isTyped
-                    ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]"
-                    : isCurrent
-                    ? isDark
-                      ? "text-amber-400 bg-amber-500/20 ring-2 ring-amber-400 scale-110 shadow-lg"
-                      : "text-orange-600 bg-orange-100 ring-2 ring-orange-500 scale-110 shadow-md"
-                    : isSpoken
-                    ? "text-cyan-400 underline underline-offset-8 decoration-cyan-400 animate-pulse"
-                    : isDark
-                    ? "text-slate-600"
-                    : "text-slate-300"
-                }`}
-              >
-                {isSpace ? (
-                  <span className={`inline-block px-1 text-xs font-sans tracking-tight uppercase opacity-80 ${isCurrent ? 'font-black text-amber-400' : ''}`}>
-                    [SPACE]
-                  </span>
-                ) : (
-                  char
-                )}
-                {isCurrent && (
-                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-1 bg-amber-400 rounded-full animate-bounce" />
-                )}
-              </span>
-            );
-          })}
+              const wordNodes = (
+                <div
+                  key={wIdx}
+                  className={`inline-flex items-center gap-0.5 px-2 py-1 rounded-xl transition-all ${
+                    isCurrentWordSpoken
+                      ? "bg-cyan-500/20 ring-2 ring-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]"
+                      : ""
+                  }`}
+                >
+                  {wordChars.map((char, cIdx) => {
+                    const charIdx = wordStartIdx + cIdx;
+                    const isTyped = charIdx < currentTypedText.length;
+                    const isTargetToType = charIdx === currentTypedText.length;
+                    const isSpokenLetter = dictationMode === "spell" && charIdx === speakingIndex && isPlaying;
+
+                    return (
+                      <span
+                        key={cIdx}
+                        className={`relative inline-flex items-center justify-center w-7 h-9 sm:w-8 sm:h-10 rounded-lg transition-all duration-100 ${
+                          isTyped
+                            ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]"
+                            : isTargetToType
+                            ? isDark
+                              ? "text-amber-400 bg-amber-500/25 ring-2 ring-amber-400 scale-105 shadow-md"
+                              : "text-orange-600 bg-orange-100 ring-2 ring-orange-500 scale-105 shadow-md"
+                            : isSpokenLetter
+                            ? "text-cyan-300 bg-cyan-500/25 ring-2 ring-cyan-400 animate-pulse scale-105"
+                            : isDark
+                            ? "text-slate-500 bg-slate-950/60 border border-slate-800/80"
+                            : "text-slate-400 bg-slate-100 border border-slate-200"
+                        }`}
+                      >
+                        {char}
+
+                        {/* Visual cursor below the active letter user needs to type */}
+                        {isTargetToType && (
+                          <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-1 bg-amber-400 rounded-full animate-bounce" />
+                        )}
+
+                        {/* Speaker beacon icon above the currently spoken letter */}
+                        {isSpokenLetter && (
+                          <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-cyan-400 rounded-full animate-ping" />
+                        )}
+                      </span>
+                    );
+                  })}
+
+                  {/* Space indicator badge after each word (except the last word) */}
+                  {wIdx < wordsList.length - 1 && (() => {
+                    const spaceIdx = wordStartIdx + wordChars.length;
+                    const isSpaceTyped = spaceIdx < currentTypedText.length;
+                    const isTargetSpace = spaceIdx === currentTypedText.length;
+                    const isSpokenSpace = dictationMode === "spell" && spaceIdx === speakingIndex && isPlaying;
+
+                    return (
+                      <span
+                        className={`relative ml-1 px-1.5 py-1 rounded-md text-[10px] font-sans font-bold tracking-tight uppercase transition-all ${
+                          isSpaceTyped
+                            ? "text-emerald-400 bg-emerald-500/15 border border-emerald-500/30"
+                            : isTargetSpace
+                            ? isDark
+                              ? "text-amber-400 bg-amber-500/25 ring-2 ring-amber-400"
+                              : "text-orange-600 bg-orange-100 ring-2 ring-orange-500"
+                            : isSpokenSpace
+                            ? "text-cyan-300 bg-cyan-500/30 ring-2 ring-cyan-400 animate-pulse"
+                            : isDark
+                            ? "text-slate-500 bg-slate-950/40 border border-slate-800/60"
+                            : "text-slate-400 bg-slate-100 border border-slate-200"
+                        }`}
+                      >
+                        [SPACE]
+                        {isTargetSpace && (
+                          <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-1 bg-amber-400 rounded-full animate-bounce" />
+                        )}
+                      </span>
+                    );
+                  })()}
+                </div>
+              );
+
+              globalCharIdx += wordChars.length + 1; // +1 for the space
+              return wordNodes;
+            });
+          })()}
         </div>
 
-        {/* Spoken Hint / Next Target Pill */}
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Next Spoken Key:</span>
-          <span className="px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-mono font-black text-sm shadow-md">
-            {currentTargetChar === " " ? "SPACEBAR" : currentTargetChar.toUpperCase() || "DONE"}
-          </span>
-          <span className="text-xs text-slate-400 italic">
-            ({dictationMode === "spell" ? "Spelling letter-by-letter with 'Space'" : "Reading full words"})
-          </span>
+        {/* Legend / Status indicator */}
+        <div className="flex flex-wrap items-center justify-center gap-4 text-xs mt-1">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+            <span className="text-slate-400">Typed Correctly</span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 ring-1 ring-amber-400" />
+            <span className="text-slate-400">Target to Type: <strong className="text-amber-400">{currentTargetChar === " " ? "SPACEBAR" : currentTargetChar.toUpperCase() || "DONE"}</strong></span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-slate-400">Voice Continuous Dictation</span>
+          </div>
         </div>
       </div>
 
