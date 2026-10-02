@@ -102,7 +102,7 @@ export const ALL_BLIND_PHRASES: BlindPhraseItem[] = [
   { id: 60, tier: "15-20", text: "There is no substitute for hard work." },
 ];
 
-type ValidationState = "typing" | "perfect" | "minor_errors" | "major_errors";
+type ValidationState = "typing" | "perfect" | "minor_errors" | "major_errors" | "reveal_answer";
 
 interface BlindTypingGameProps {
   theme: KeyboardTheme;
@@ -119,17 +119,28 @@ export function BlindTypingGame({
 }: BlindTypingGameProps) {
   const isDark = theme.isDark || theme.category === "Dark";
 
-  // Pick random sentence on start
+  // Indirect Tier Management (5-10 -> 10-15 -> 15-20)
+  // NEVER display "Level" anywhere in UI
+  const [currentTier, setCurrentTier] = useState<"5-10" | "10-15" | "15-20">("5-10");
+  const [tierSuccessCount, setTierSuccessCount] = useState<number>(0);
+
+  // Filter pool by current indirect tier
+  const getPoolForTier = useCallback((tier: "5-10" | "10-15" | "15-20") => {
+    return ALL_BLIND_PHRASES.filter((p) => p.tier === tier);
+  }, []);
+
+  // Pick initial random sentence strictly from 5-10 words tier
   const [currentPhraseObj, setCurrentPhraseObj] = useState<BlindPhraseItem>(() => {
-    const pool = ALL_BLIND_PHRASES;
-    const initialIndex = Math.floor(Math.random() * pool.length);
-    return pool[initialIndex] || pool[0];
+    const tierPool = ALL_BLIND_PHRASES.filter((p) => p.tier === "5-10");
+    const initialIndex = Math.floor(Math.random() * tierPool.length);
+    return tierPool[initialIndex] || ALL_BLIND_PHRASES[0];
   });
 
   const [typedInput, setTypedInput] = useState<string>("");
   const [validationState, setValidationState] = useState<ValidationState>("typing");
   const [activeChunk, setActiveChunk] = useState<1 | 2>(1); // 1 = First 7-8 words, 2 = Remaining words
   const [mistakesCount, setMistakesCount] = useState<number>(0);
+  const [lineFailCount, setLineFailCount] = useState<number>(0); // Tracks failed attempts on the current line
   const [errorIndices, setErrorIndices] = useState<Set<number>>(new Set());
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [speechRate, setSpeechRate] = useState<number>(0.9);
@@ -140,12 +151,13 @@ export function BlindTypingGame({
   const [endTime, setEndTime] = useState<number | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentPhrase = currentPhraseObj.text;
 
   // Chunking logic for long sentences (>11 words / 15-20 tier)
   const words = currentPhrase.split(" ");
   const isMultiPart = words.length >= 12; // 15-20 words tier
-  const splitWordIndex = isMultiPart ? Math.min(8, Math.floor(words.length / 2)) : words.length;
+  const splitWordIndex = isMultiPart ? Math.min(8, Math.max(6, Math.floor(words.length / 2))) : words.length;
 
   const part1Words = words.slice(0, splitWordIndex);
   const part2Words = words.slice(splitWordIndex);
@@ -210,14 +222,34 @@ export function BlindTypingGame({
     [isMultiPart, part1Text, part2Text, currentPhrase, speechRate, speechMode]
   );
 
-  // Pick next random sentence
+  // Advance to next phrase with indirect tier progression
   const nextRandomPhrase = useCallback(() => {
-    const pool = ALL_BLIND_PHRASES;
-    const otherPool = pool.filter((p) => p.id !== currentPhraseObj.id);
-    const candidatePool = otherPool.length > 0 ? otherPool : pool;
+    if (revealTimerRef.current) {
+      clearTimeout(revealTimerRef.current);
+      revealTimerRef.current = null;
+    }
+
+    // Determine target tier based on progression
+    let nextTier = currentTier;
+    // Advance tier every 3 successful completions (5-10 -> 10-15 -> 15-20)
+    if (currentTier === "5-10" && tierSuccessCount >= 3) {
+      nextTier = "10-15";
+      setCurrentTier("10-15");
+      setTierSuccessCount(0);
+    } else if (currentTier === "10-15" && tierSuccessCount >= 3) {
+      nextTier = "15-20";
+      setCurrentTier("15-20");
+      setTierSuccessCount(0);
+    }
+
+    const tierPool = getPoolForTier(nextTier);
+    const otherPool = tierPool.filter((p) => p.id !== currentPhraseObj.id);
+    const candidatePool = otherPool.length > 0 ? otherPool : tierPool;
     const randomIdx = Math.floor(Math.random() * candidatePool.length);
+    
+    setLineFailCount(0); // Reset mistake count for new line
     setCurrentPhraseObj(candidatePool[randomIdx]);
-  }, [currentPhraseObj]);
+  }, [currentTier, tierSuccessCount, currentPhraseObj.id, getPoolForTier]);
 
   // Reset and speak Part 1 when phrase changes
   useEffect(() => {
@@ -237,6 +269,9 @@ export function BlindTypingGame({
 
     return () => {
       clearTimeout(timer);
+      if (revealTimerRef.current) {
+        clearTimeout(revealTimerRef.current);
+      }
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -256,6 +291,30 @@ export function BlindTypingGame({
     inputRef.current?.focus();
   }, [speakPart]);
 
+  // Handle revealing the answer after > 3 failed attempts on the same line
+  const triggerRevealAnswer = useCallback(() => {
+    setValidationState("reveal_answer");
+    soundEngine.playKeySound("Backspace");
+    
+    speakVoiceRemark("This is how it should be.", () => {
+      // Speak the answer aloud
+      setTimeout(() => {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          const utter = new SpeechSynthesisUtterance(currentPhrase);
+          utter.rate = 0.88;
+          utter.pitch = 1.0;
+          utter.onend = () => {
+            // Auto transition to next sentence after brief review
+            revealTimerRef.current = setTimeout(() => {
+              nextRandomPhrase();
+            }, 3000);
+          };
+          window.speechSynthesis.speak(utter);
+        }
+      }, 400);
+    });
+  }, [currentPhrase, speakVoiceRemark, nextRandomPhrase]);
+
   // Keyboard shortcut listener for (Y / N) when minor error prompt is open
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -264,6 +323,11 @@ export function BlindTypingGame({
           e.preventDefault();
           resetCurrentPhrase();
         } else if (e.key.toLowerCase() === "n" || e.key === "Escape") {
+          e.preventDefault();
+          nextRandomPhrase();
+        }
+      } else if (validationState === "reveal_answer") {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           nextRandomPhrase();
         }
@@ -290,7 +354,7 @@ export function BlindTypingGame({
       // Small pause then speak Part 2
       setTimeout(() => {
         speakPart(2);
-      }, 200);
+      }, 250);
     }
 
     const targetLength = currentPhrase.length;
@@ -321,22 +385,33 @@ export function BlindTypingGame({
         // CASE 1: 0 ERRORS -> PERFECT MATCH
         setValidationState("perfect");
         setStreak((prev) => prev + 1);
+        setTierSuccessCount((prev) => prev + 1);
+        setLineFailCount(0);
         soundEngine.playKeySound("Enter");
         speakVoiceRemark("Perfect match! Well done.");
-      } else if (errors === 1 || errors === 2) {
-        // CASE 2: 1 OR 2 ERRORS -> NOT PERFECT MATCH, ASK TO RETRY
-        setValidationState("minor_errors");
-        soundEngine.playKeySound("Backspace");
-        speakVoiceRemark("Not a perfect match. Would you like to type again?");
       } else {
-        // CASE 3: MORE THAN 3 ERRORS (>= 3) -> RESET AND TELL PART 1 AGAIN
-        setValidationState("major_errors");
-        soundEngine.playKeySound("Backspace");
-        speakVoiceRemark("More than two mistakes. Let's try that line again.", () => {
-          setTimeout(() => {
-            resetCurrentPhrase();
-          }, 400);
-        });
+        // Increment fail counter for this specific line
+        const newFailCount = lineFailCount + 1;
+        setLineFailCount(newFailCount);
+
+        // If user fails on the same line for 3 or more times -> Reveal answer & advance!
+        if (newFailCount >= 3) {
+          triggerRevealAnswer();
+        } else if (errors === 1 || errors === 2) {
+          // CASE 2: 1 OR 2 ERRORS (< 3 fails on this line) -> ASK TO RETRY
+          setValidationState("minor_errors");
+          soundEngine.playKeySound("Backspace");
+          speakVoiceRemark("Not a perfect match. Would you like to type again?");
+        } else {
+          // CASE 3: 3+ ERRORS on this attempt (< 3 fails on this line) -> RESET AND RETRY
+          setValidationState("major_errors");
+          soundEngine.playKeySound("Backspace");
+          speakVoiceRemark("More than two mistakes. Let's try that line again.", () => {
+            setTimeout(() => {
+              resetCurrentPhrase();
+            }, 500);
+          });
+        }
       }
     }
   };
@@ -434,6 +509,10 @@ export function BlindTypingGame({
             ? isDark
               ? "bg-emerald-950/40 border-emerald-500/50 text-white shadow-[0_0_20px_rgba(16,185,129,0.15)]"
               : "bg-emerald-50 border-emerald-300 text-slate-900"
+            : validationState === "reveal_answer"
+            ? isDark
+              ? "bg-purple-950/50 border-purple-400/70 text-white shadow-[0_0_25px_rgba(168,85,247,0.25)]"
+              : "bg-purple-50 border-purple-400 text-slate-900"
             : validationState === "minor_errors"
             ? isDark
               ? "bg-amber-950/40 border-amber-500/50 text-white shadow-[0_0_20px_rgba(245,158,11,0.15)]"
@@ -467,10 +546,12 @@ export function BlindTypingGame({
                   ? isMultiPart
                     ? `Speaking Part ${activeChunk} of 2...`
                     : "Speaking Audio..."
+                  : validationState === "reveal_answer"
+                  ? "This is how it should be • Moving to Next..."
                   : validationState === "minor_errors"
-                  ? "Not Perfect Match • Retype or Continue?"
+                  ? `Mistake on line (${lineFailCount}/3) • Retype or Continue?`
                   : validationState === "major_errors"
-                  ? "3+ Errors • Replaying line..."
+                  ? `Attempt ${lineFailCount}/3 • Replaying line...`
                   : isMultiPart
                   ? `Part ${activeChunk}/2 • ${activeChunk === 1 ? `First ${splitWordIndex} Words` : "Remaining Words"} (${wordCount} total words)`
                   : `Audio Phrase #${currentPhraseObj.id} (${wordCount} words)`}
@@ -595,7 +676,7 @@ export function BlindTypingGame({
                   <span className={`px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider ${
                     activeChunk === 1 ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                   }`}>
-                    {activeChunk === 1 ? "Typing Part 1 (First 7-8 Words)" : "Typing Part 2 (Next Words)"}
+                    {activeChunk === 1 ? `Typing Part 1 (First ${splitWordIndex} Words)` : "Typing Part 2 (Next Words)"}
                   </span>
                 )}
               </span>
@@ -644,7 +725,7 @@ export function BlindTypingGame({
                 onClick={nextRandomPhrase}
                 className="flex items-center gap-1 px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
-                <span>Next Random Phrase</span>
+                <span>Next Phrase</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -724,7 +805,7 @@ export function BlindTypingGame({
         )}
 
         {/* ============================================================ */}
-        {/* VIEW 4: MAJOR ERRORS (3+ ERRORS) -> AUTO RESET ALERT         */}
+        {/* VIEW 4: MAJOR ERRORS (3+ ERRORS ON ATTEMPT) -> RETRY LINE    */}
         {/* ============================================================ */}
         {validationState === "major_errors" && (
           <motion.div
@@ -737,6 +818,43 @@ export function BlindTypingGame({
               <span>{mistakesCount} mistakes made. Resetting and telling Part 1 again...</span>
             </div>
             <span className="text-[10px] font-mono animate-pulse">Listening...</span>
+          </motion.div>
+        )}
+
+        {/* ============================================================ */}
+        {/* VIEW 5: REVEAL ANSWER (3+ FAILS ON SAME LINE)                */}
+        {/* ============================================================ */}
+        {validationState === "reveal_answer" && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full flex flex-col gap-2 pt-1 border-t border-purple-500/30"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400 shrink-0 animate-spin" />
+                <span className="text-xs font-bold text-purple-300">
+                  This is how it should be:
+                </span>
+                <div
+                  className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold border shadow-inner ${
+                    isDark
+                      ? "bg-slate-950 text-purple-200 border-purple-400/60 shadow-purple-500/10"
+                      : "bg-purple-100 text-purple-950 border-purple-400"
+                  }`}
+                >
+                  {currentPhrase}
+                </div>
+              </div>
+
+              <button
+                onClick={nextRandomPhrase}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              >
+                <span>Next Question</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </motion.div>
         )}
       </div>
