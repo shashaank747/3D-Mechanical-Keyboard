@@ -296,22 +296,13 @@ export function BlindTypingGame({
     setValidationState("reveal_answer");
     soundEngine.playKeySound("Backspace");
     
-    speakVoiceRemark("This is how it should be.", () => {
-      // Speak the answer aloud
-      setTimeout(() => {
-        if (typeof window !== "undefined" && "speechSynthesis" in window) {
-          const utter = new SpeechSynthesisUtterance(currentPhrase);
-          utter.rate = 0.88;
-          utter.pitch = 1.0;
-          utter.onend = () => {
-            // Auto transition to next sentence after brief review
-            revealTimerRef.current = setTimeout(() => {
-              nextRandomPhrase();
-            }, 3000);
-          };
-          window.speechSynthesis.speak(utter);
-        }
-      }, 400);
+    // Speak "This is how it should be: [Sentence]"
+    const speechText = `This is how it should be: ${currentPhrase}`;
+    speakVoiceRemark(speechText, () => {
+      // Auto transition to next sentence after student sees the full revealed words
+      revealTimerRef.current = setTimeout(() => {
+        nextRandomPhrase();
+      }, 4000);
     });
   }, [currentPhrase, speakVoiceRemark, nextRandomPhrase]);
 
@@ -828,32 +819,48 @@ export function BlindTypingGame({
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full flex flex-col gap-2 pt-1 border-t border-purple-500/30"
+            className="w-full flex flex-col gap-2.5 pt-1.5 border-t border-purple-500/30"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            {/* Header remark */}
+            <div className="w-full flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-400 shrink-0 animate-spin" />
-                <span className="text-xs font-bold text-purple-300">
+                <span className="p-1 rounded-lg bg-purple-500/20 text-purple-400">
+                  <Sparkles className="w-4 h-4 animate-spin" />
+                </span>
+                <span className="text-xs font-black uppercase tracking-wider text-purple-400">
                   This is how it should be:
                 </span>
-                <div
-                  className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold border shadow-inner ${
-                    isDark
-                      ? "bg-slate-950 text-purple-200 border-purple-400/60 shadow-purple-500/10"
-                      : "bg-purple-100 text-purple-950 border-purple-400"
-                  }`}
-                >
-                  {currentPhrase}
-                </div>
               </div>
 
               <button
                 onClick={nextRandomPhrase}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 <span>Next Question</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
+            </div>
+
+            {/* Prominent Revealed Words Display */}
+            <div
+              className={`w-full p-3 rounded-xl border flex flex-wrap items-center justify-center gap-2 ${
+                isDark
+                  ? "bg-slate-950/80 border-purple-400/40 shadow-[0_0_20px_rgba(168,85,247,0.15)]"
+                  : "bg-purple-50/90 border-purple-300 shadow-sm"
+              }`}
+            >
+              {words.map((word, wIdx) => (
+                <span
+                  key={wIdx}
+                  className={`px-2.5 py-1 rounded-lg font-mono text-sm font-bold border transition-all ${
+                    isDark
+                      ? "bg-purple-900/30 border-purple-500/40 text-purple-200"
+                      : "bg-white border-purple-200 text-purple-900 shadow-xs"
+                  }`}
+                >
+                  {word}
+                </span>
+              ))}
             </div>
           </motion.div>
         )}
