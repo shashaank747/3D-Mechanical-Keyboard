@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { bgMusic } from "@/lib/bgMusic";
-import { Music, Play, Pause, Volume2, VolumeX, Sparkles } from "lucide-react";
+import { bgMusic, PLAYLIST } from "@/lib/bgMusic";
+import { Music, Play, Pause, Volume2, VolumeX, SkipForward, SkipBack } from "lucide-react";
 
 interface MusicPlayerProps {
   isDark: boolean;
@@ -13,6 +13,8 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState<boolean>(bgMusic.getIsPlaying());
   const [isMuted, setIsMuted] = useState<boolean>(bgMusic.getIsMuted());
   const [volume, setVolume] = useState<number>(bgMusic.getVolume());
+  const [currentTrack, setCurrentTrack] = useState(bgMusic.getCurrentTrack());
+  const [trackIndex, setTrackIndex] = useState<number>(bgMusic.getCurrentTrackIndex());
   const [showVolumeSlider, setShowVolumeSlider] = useState<boolean>(false);
 
   useEffect(() => {
@@ -20,6 +22,8 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
       setIsPlaying(bgMusic.getIsPlaying());
       setIsMuted(bgMusic.getIsMuted());
       setVolume(bgMusic.getVolume());
+      setCurrentTrack(bgMusic.getCurrentTrack());
+      setTrackIndex(bgMusic.getCurrentTrackIndex());
     });
     return () => unsubscribe();
   }, []);
@@ -27,6 +31,16 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
   const handleTogglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
     bgMusic.togglePlay();
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    bgMusic.nextTrack(true);
+  };
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    bgMusic.prevTrack(true);
   };
 
   const handleToggleMute = (e: React.MouseEvent) => {
@@ -44,7 +58,7 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
     <div className="relative flex items-center">
       {/* Pill Container */}
       <div
-        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-full border backdrop-blur-md shadow-xs transition-all ${
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md shadow-xs transition-all ${
           isPlaying
             ? isDark
               ? "bg-gradient-to-r from-orange-950/70 to-amber-950/70 border-orange-500/50 text-orange-200 shadow-[0_0_15px_rgba(249,115,22,0.2)]"
@@ -54,19 +68,37 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
             : "bg-white/80 border-slate-200 text-slate-600 hover:text-slate-900"
         }`}
       >
+        {/* Prev Track Trigger */}
+        <button
+          onClick={handlePrev}
+          className="p-1 rounded-full text-slate-400 hover:text-orange-500 transition-colors cursor-pointer"
+          title="Previous Track"
+        >
+          <SkipBack className="w-3 h-3" />
+        </button>
+
         {/* Play / Pause Trigger */}
         <button
           onClick={handleTogglePlay}
-          className={`p-1 rounded-full transition-all cursor-pointer flex items-center justify-center ${
+          className={`p-1.5 rounded-full transition-all cursor-pointer flex items-center justify-center ${
             isPlaying
               ? "bg-orange-500 text-white shadow-xs hover:scale-110"
               : isDark
               ? "bg-slate-800 hover:bg-slate-700 text-slate-300"
               : "bg-slate-100 hover:bg-slate-200 text-slate-700"
           }`}
-          title={isPlaying ? "Pause Chill BGM" : "Play 'Sunlight on the Desk'"}
+          title={isPlaying ? `Pause (${currentTrack.title})` : `Play (${currentTrack.title})`}
         >
           {isPlaying ? <Pause className="w-3 h-3 fill-white" /> : <Play className="w-3 h-3 fill-current ml-0.5" />}
+        </button>
+
+        {/* Next Track Trigger */}
+        <button
+          onClick={handleNext}
+          className="p-1 rounded-full text-slate-400 hover:text-orange-500 transition-colors cursor-pointer"
+          title="Next Track"
+        >
+          <SkipForward className="w-3 h-3" />
         </button>
 
         {/* Animated Soundwave Visualizer Bars */}
@@ -97,14 +129,14 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
         {/* Track Title */}
         <div
           onClick={handleTogglePlay}
-          className="flex items-center gap-1 cursor-pointer select-none"
-          title="Sunlight on the Desk (3:00 Chill Vibe Track)"
+          className="flex items-center gap-1.5 cursor-pointer select-none"
+          title={`${currentTrack.title} (${trackIndex + 1}/${PLAYLIST.length})`}
         >
-          <span className="text-[11px] font-bold tracking-tight truncate max-w-[130px] sm:max-w-[160px]">
-            Sunlight on the Desk
+          <span className="text-[11px] font-bold tracking-tight truncate max-w-[120px] sm:max-w-[150px]">
+            {currentTrack.title}
           </span>
-          <span className="text-[9px] font-mono opacity-70 px-1 py-0.2 rounded bg-orange-500/10 text-orange-500 hidden sm:inline font-bold">
-            BGM
+          <span className="text-[9px] font-mono opacity-75 px-1 py-0.2 rounded bg-orange-500/10 text-orange-500 hidden sm:inline font-bold">
+            {trackIndex + 1}/{PLAYLIST.length}
           </span>
         </div>
 
