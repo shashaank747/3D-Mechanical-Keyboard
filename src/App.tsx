@@ -874,13 +874,13 @@ export default function KeyboardLandingPage() {
       <AnimatePresence>
         {isLoginModalOpen && (
           <div className="fixed inset-0 z-50 flex flex-col items-center justify-between p-2 sm:p-4 bg-slate-950/40 backdrop-blur-xl overflow-hidden">
-            {/* Horizontal Wide & Spacious Wing Card */}
+            {/* Enriched & Spacious Authentication Wing Card */}
             <motion.div
-              initial={{ opacity: 0, y: -30, scale: 0.98 }}
+              initial={{ opacity: 0, y: -25, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.98 }}
               transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className={`w-full max-w-5xl px-5 sm:px-8 py-5 sm:py-6 rounded-2xl sm:rounded-3xl border-2 shadow-[0_15px_40px_rgba(234,88,12,0.25)] relative z-20 backdrop-blur-2xl flex flex-col gap-3.5 ${
+              className={`w-full max-w-5xl p-6 sm:p-8 rounded-3xl border-2 shadow-[0_20px_50px_rgba(234,88,12,0.25)] relative z-20 backdrop-blur-2xl flex flex-col gap-6 ${
                 isDark
                   ? "bg-slate-900/95 border-orange-500/40 text-white"
                   : "bg-white/95 border-orange-500/40 text-slate-900"
@@ -892,10 +892,10 @@ export default function KeyboardLandingPage() {
                   setIsLoginModalOpen(false);
                   setLoginWarningMessage(null);
                 }}
-                className="absolute top-3.5 sm:top-4 right-3.5 sm:right-4 p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all cursor-pointer z-30"
+                className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all cursor-pointer z-30"
                 title="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
 
               {/* Warning Alert if triggered without login */}
@@ -903,7 +903,7 @@ export default function KeyboardLandingPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-2 sm:p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500 text-xs font-bold flex items-center justify-between gap-2 shadow-xs"
+                  className="p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 shadow-xs"
                 >
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 shrink-0 animate-bounce" />
@@ -913,176 +913,229 @@ export default function KeyboardLandingPage() {
                 </motion.div>
               )}
 
-              {/* Horizontal Row: Left info & tabs + Right form controls */}
-              <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-4 pr-6 sm:pr-8">
-                {/* Left Branding & Mode Switcher */}
-                <div className="flex flex-wrap items-center gap-3 sm:gap-3.5 shrink-0">
-                  <div className="p-2.5 sm:p-3 rounded-2xl bg-orange-500/20 text-orange-500 border border-orange-500/30 shadow-xs">
-                    {authMode === "signin" ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+              {/* Top Header Row: Branding & Mode Switcher Tabs */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-orange-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25 shrink-0">
+                    {authMode === "signin" ? <LogIn className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />}
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm sm:text-base font-black tracking-tight">
-                        {authMode === "signin" ? "Student / Dev Sign In" : "Create Account"}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500 text-white font-mono uppercase font-bold">
+                      <h2 className="text-lg sm:text-xl font-black tracking-tight">
+                        {authMode === "signin" ? "Student & Developer Sign In" : "Create SETU Account"}
+                      </h2>
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-orange-500 text-white font-mono uppercase font-black">
                         SETU
                       </span>
                     </div>
-                    <span className="text-xs text-slate-400 hidden sm:inline mt-0.5">
-                      {authMode === "signin" ? "Unlock Let's Play & save typing scores" : "Join to save high-scores & streaks"}
-                    </span>
-                  </div>
-
-                  {/* Auth Mode Toggle Pill */}
-                  <div className="flex rounded-xl p-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 ml-1">
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode("signin")}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                        authMode === "signin"
-                          ? "bg-orange-500 text-white shadow-xs"
-                          : "text-slate-400 hover:text-slate-200"
-                      }`}
-                    >
-                      Sign In
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode("signup")}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                        authMode === "signup"
-                          ? "bg-orange-500 text-white shadow-xs"
-                          : "text-slate-400 hover:text-slate-200"
-                      }`}
-                    >
-                      New User
-                    </button>
+                    <p className={`text-xs sm:text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                      {authMode === "signin"
+                        ? "Sign in to unlock the Arcade, save typing metrics, and access all 16 levels"
+                        : "Join SETU to track muscle memory streaks, personal best WPM, and leaderboards"}
+                    </p>
                   </div>
                 </div>
 
-                {/* Right Form Inputs (Horizontally Aligned with generous vertical padding) */}
-                <div className="flex-1 w-full lg:w-auto flex justify-end">
-                  {authMode === "signin" ? (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (loginEmail.trim()) {
-                          const user = loginEmail.split("@")[0];
-                          setLoggedInUser(user);
-                          if (typeof window !== "undefined") {
-                            localStorage.setItem("setu_active_user", user);
-                          }
-                          setIsLoginModalOpen(false);
-                          setLoginWarningMessage(null);
-                          setLoginEmail("");
-                          setLoginPassword("");
-                          confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
-                        }
-                      }}
-                      className="w-full flex flex-wrap sm:flex-nowrap items-center gap-2.5 justify-end"
-                    >
+                {/* Mode Switcher Pill */}
+                <div className="flex rounded-2xl p-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode("signin")}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      authMode === "signin"
+                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode("signup")}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      authMode === "signup"
+                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Create Account
+                  </button>
+                </div>
+              </div>
+
+              {/* Form Input Row (Full-width grid) */}
+              {authMode === "signin" ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (loginEmail.trim()) {
+                      const user = loginEmail.split("@")[0];
+                      setLoggedInUser(user);
+                      if (typeof window !== "undefined") {
+                        localStorage.setItem("setu_active_user", user);
+                      }
+                      setIsLoginModalOpen(false);
+                      setLoginWarningMessage(null);
+                      setLoginEmail("");
+                      setLoginPassword("");
+                      confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
+                    }
+                  }}
+                  className="flex flex-col gap-4"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+                    {/* Email Input */}
+                    <div className="sm:col-span-5 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email or Username</label>
                       <input
                         type="text"
                         required
                         placeholder="example@gmail.com"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
-                        className={`w-full sm:w-52 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
+                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
                         }`}
                       />
+                    </div>
 
+                    {/* Password Input */}
+                    <div className="sm:col-span-4 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
                       <input
                         type="password"
                         required
-                        placeholder="Password"
+                        placeholder="••••••••"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                        className={`w-full sm:w-40 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
+                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
                         }`}
                       />
+                    </div>
 
+                    {/* Submit Button */}
+                    <div className="sm:col-span-3 flex flex-col justify-end">
                       <button
                         type="submit"
-                        className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-md shadow-orange-500/25 transition-all cursor-pointer whitespace-nowrap"
+                        className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-lg shadow-orange-500/25 hover:scale-102 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
                       >
-                        Sign In & Play
+                        <LogIn className="w-4 h-4" />
+                        <span>Sign In & Play</span>
                       </button>
-                    </form>
-                  ) : (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (signupName.trim() || signupEmail.trim()) {
-                          const user = signupName.trim() || signupEmail.split("@")[0];
-                          setLoggedInUser(user);
-                          if (typeof window !== "undefined") {
-                            localStorage.setItem("setu_active_user", user);
-                          }
-                          setIsLoginModalOpen(false);
-                          setLoginWarningMessage(null);
-                          setSignupName("");
-                          setSignupEmail("");
-                          setSignupPassword("");
-                          confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
-                        }
-                      }}
-                      className="w-full flex flex-wrap sm:flex-nowrap items-center gap-2.5 justify-end"
-                    >
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (signupName.trim() || signupEmail.trim()) {
+                      const user = signupName.trim() || signupEmail.split("@")[0];
+                      setLoggedInUser(user);
+                      if (typeof window !== "undefined") {
+                        localStorage.setItem("setu_active_user", user);
+                      }
+                      setIsLoginModalOpen(false);
+                      setLoginWarningMessage(null);
+                      setSignupName("");
+                      setSignupEmail("");
+                      setSignupPassword("");
+                      confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
+                    }
+                  }}
+                  className="flex flex-col gap-4"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+                    {/* Full Name */}
+                    <div className="sm:col-span-4 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
                       <input
                         type="text"
                         required
-                        placeholder="Full Name"
+                        placeholder="John Doe"
                         value={signupName}
                         onChange={(e) => setSignupName(e.target.value)}
-                        className={`w-full sm:w-40 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
+                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
                         }`}
                       />
+                    </div>
 
+                    {/* Email */}
+                    <div className="sm:col-span-3 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
                       <input
                         type="text"
                         required
                         placeholder="example@gmail.com"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
-                        className={`w-full sm:w-48 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
+                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
                         }`}
                       />
+                    </div>
 
+                    {/* Password */}
+                    <div className="sm:col-span-2 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
                       <input
                         type="password"
                         required
-                        placeholder="Password"
+                        placeholder="••••••••"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
-                        className={`w-full sm:w-36 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
+                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
                         }`}
                       />
+                    </div>
 
+                    {/* Create Button */}
+                    <div className="sm:col-span-3 flex flex-col justify-end">
                       <button
                         type="submit"
-                        className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-md shadow-orange-500/25 transition-all cursor-pointer whitespace-nowrap"
+                        className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-lg shadow-orange-500/25 hover:scale-102 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
                       >
-                        Create & Play
+                        <UserPlus className="w-4 h-4" />
+                        <span>Create & Play</span>
                       </button>
-                    </form>
-                  )}
+                    </div>
+                  </div>
+                </form>
+              )}
+
+              {/* Bottom Feature Perks Row */}
+              <div className={`pt-4 border-t flex flex-wrap items-center justify-between gap-3 text-xs ${isDark ? "border-slate-800/80 text-slate-400" : "border-slate-200/80 text-slate-500"}`}>
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-orange-500" />
+                    <span>Instant High-Score Sync</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Gamepad2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Unlocks All 5 Arcade Games</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Live 3D Mech Feedback Active</span>
+                  </span>
                 </div>
+
+                <span className="font-mono text-[11px] text-orange-400 font-bold">
+                  Type on keyboard below anytime ↵
+                </span>
               </div>
             </motion.div>
 
