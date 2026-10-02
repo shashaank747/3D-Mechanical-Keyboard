@@ -467,9 +467,9 @@ export function Keyboard({
     const testedClasses = "!bg-gradient-to-b !from-emerald-400 !via-emerald-500 !to-emerald-600 !text-white !border-emerald-600 !border-b-[2px] !border-b-emerald-800 !translate-y-1 !shadow-[0_2px_14px_rgba(16,185,129,0.55),inset_0_2px_4px_rgba(0,0,0,0.3)] ring-2 ring-emerald-400/80";
 
     return cn(
-      "relative flex flex-col items-center justify-center font-mono font-bold rounded-xl transition-all duration-100 select-none outline-none",
+      "relative flex flex-col items-center justify-center font-mono font-bold rounded-lg sm:rounded-xl transition-all duration-100 select-none outline-none",
       allowMouseClick ? "cursor-pointer" : "cursor-default",
-      "h-11 sm:h-13 md:h-14",
+      "h-[clamp(2.1rem,3.7vw,3.4rem)]",
       isPermanentlyClicked ? testedClasses : base,
       isPressed && !isPermanentlyClicked && theme.keyActive,
       isPressed && isPermanentlyClicked && "!brightness-110 !translate-y-1.5",
@@ -478,30 +478,30 @@ export function Keyboard({
   };
 
   return (
-    <div className={cn("flex flex-col items-center w-full max-w-5xl mx-auto select-none", className)}>
+    <div className={cn("flex flex-col items-center w-full max-w-5xl mx-auto select-none px-1 sm:px-2", className)}>
       {/* 3D Keyboard Perspective Wrapper */}
-      <div className="relative w-full transition-all duration-500 ease-out perspective-keyboard flex justify-center py-2 transform -rotate-x-2">
+      <div className="relative w-full transition-all duration-500 ease-out perspective-keyboard flex justify-center py-1 sm:py-2 transform -rotate-x-2">
         {/* Physical 3D Keyboard CNC Chassis */}
         <div
           className={cn(
-            "relative w-full p-4 sm:p-6 md:p-7 rounded-[32px] border transition-all duration-300 overflow-visible",
+            "relative w-full p-2 sm:p-4 md:p-5 lg:p-6 rounded-[20px] sm:rounded-[28px] md:rounded-[32px] border transition-all duration-300 overflow-visible",
             theme.chassis
           )}
         >
           {/* Brass Inset Weight */}
-          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-16 h-1 rounded-full bg-slate-300/60 shadow-inner" />
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 sm:w-16 h-1 rounded-full bg-slate-300/60 shadow-inner" />
 
           {/* Rubber Corner Mounts */}
-          <div className="absolute top-3 left-4 w-2 h-2 rounded-full bg-slate-300/80 shadow-inner" />
-          <div className="absolute top-3 right-4 w-2 h-2 rounded-full bg-slate-300/80 shadow-inner" />
-          <div className="absolute bottom-3 left-4 w-2 h-2 rounded-full bg-slate-300/80 shadow-inner" />
-          <div className="absolute bottom-3 right-4 w-2 h-2 rounded-full bg-slate-300/80 shadow-inner" />
+          <div className="absolute top-2.5 left-3 sm:left-4 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-slate-300/80 shadow-inner" />
+          <div className="absolute top-2.5 right-3 sm:right-4 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-slate-300/80 shadow-inner" />
+          <div className="absolute bottom-2.5 left-3 sm:left-4 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-slate-300/80 shadow-inner" />
+          <div className="absolute bottom-2.5 right-3 sm:right-4 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-slate-300/80 shadow-inner" />
 
           {/* Recessed Switch Plate */}
           <div
             ref={plateRef}
             className={cn(
-              "relative w-full flex flex-col gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-[24px] border border-slate-300/80 transition-all overflow-visible",
+              "relative w-full flex flex-col gap-1 sm:gap-1.5 md:gap-2 p-1.5 sm:p-2.5 md:p-3.5 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] border border-slate-300/80 transition-all overflow-visible",
               theme.plate
             )}
           >
@@ -510,7 +510,7 @@ export function Keyboard({
 
             {/* KEYCAPS GRID */}
             {LAYOUT_65.map((row, rowIdx) => (
-              <div key={rowIdx} className="w-full flex items-center gap-1.5 sm:gap-2 justify-between z-10">
+              <div key={rowIdx} className="w-full flex items-center gap-1 sm:gap-1.5 md:gap-2 justify-between z-10">
                 {row.map((key) => {
                   const isPressed = pressedKeys.has(key.code);
                   const isTested = testedKeys.has(key.code);
@@ -606,19 +606,19 @@ export function Keyboard({
                         <div className="flex flex-col items-center justify-center leading-none py-0.5 pointer-events-none">
                           <span
                             className={cn(
-                              "text-[10px] sm:text-[11px] font-semibold",
+                              "text-[clamp(7px,0.85vw,10px)] font-semibold",
                               isTested || isTarget ? "text-white/90 font-bold" : "opacity-60"
                             )}
                           >
                             {key.subLabel}
                           </span>
-                          <span className="text-xs sm:text-sm font-extrabold mt-0.5">{key.label}</span>
+                          <span className="text-[clamp(9px,1.05vw,13px)] font-extrabold mt-0.5">{key.label}</span>
                         </div>
                       ) : (
                         <span
                           className={cn(
-                            "text-xs sm:text-sm font-extrabold tracking-tight pointer-events-none",
-                            isTarget && "tracking-wider text-base"
+                            "text-[clamp(9px,1.05vw,13px)] font-extrabold tracking-tight pointer-events-none",
+                            isTarget && "tracking-wider text-sm sm:text-base"
                           )}
                         >
                           {key.label}
