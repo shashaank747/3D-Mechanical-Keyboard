@@ -12,6 +12,7 @@ import { KeyboardGame } from "@/components/ui/KeyboardGame";
 import { GamesHub } from "@/components/ui/GamesHub";
 import { FallingWordsGame } from "@/components/ui/FallingWordsGame";
 import { SoundMatrixGame } from "@/components/ui/SoundMatrixGame";
+import { BlindTypingGame } from "@/components/ui/BlindTypingGame";
 import { KEYBOARD_THEMES, type KeyboardTheme } from "@/lib/themes";
 import { 
   Keyboard as KeyboardIcon, Sparkles, 
@@ -24,7 +25,7 @@ import { MusicPlayer } from "@/components/ui/MusicPlayer";
 import { bgMusic } from "@/lib/bgMusic";
 import { soundEngine } from "@/lib/sound";
 
-export type AppPage = "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "shortcuts";
+export type AppPage = "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts";
 
 export default function KeyboardLandingPage() {
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
@@ -453,6 +454,18 @@ export default function KeyboardLandingPage() {
       )}
 
       {/* ============================================================ */}
+      {/* GAME 4: BLIND TYPING DOJO (PURE AUDIO DICTATION)             */}
+      {/* ============================================================ */}
+      {currentPage === "blindtyping" && (
+        <BlindTypingGame
+          theme={currentTheme}
+          colorZones={colorZones}
+          onOpenThemeSidebar={() => setIsThemeSidebarOpen(true)}
+          onBackToHub={() => setCurrentPage("start")}
+        />
+      )}
+
+      {/* ============================================================ */}
       {/* GAME 4: SPEED TEST ARENA PAGE                                */}
       {/* ============================================================ */}
       {currentPage === "speedtest" && (
@@ -727,7 +740,7 @@ export default function KeyboardLandingPage() {
       )}
 
       {/* Footer (Hidden during interactive gameplay views for zero-scroll viewport) */}
-      {currentPage !== "academy" && currentPage !== "fallingwords" && currentPage !== "soundmatrix" && (
+      {currentPage !== "academy" && currentPage !== "fallingwords" && currentPage !== "soundmatrix" && currentPage !== "blindtyping" && (
         <footer
           className={`relative z-10 w-full border-t ${currentTheme.headerBorder} py-8 px-6 mt-12 bg-white/40 backdrop-blur-md transition-colors`}
         >

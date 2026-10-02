@@ -17,7 +17,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-export type GameId = "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "shortcuts";
+export type GameId = "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts";
 
 export interface GameCardInfo {
   id: GameId;
@@ -44,6 +44,18 @@ const ARCADE_GAMES: GameCardInfo[] = [
     gradient: "from-orange-500/20 via-amber-500/10 to-transparent",
     metrics: ["16 Master Levels", "Left & Right Only", "Dual-Hands HUD", "Donut Pie Charts"],
     buttonText: "PLAY TOUCH TYPING ACADEMY",
+  },
+  {
+    id: "blindtyping",
+    title: "Blind Typing Dojo",
+    tagline: "Pure Audio Dictation • Words Hidden",
+    category: "Pure Muscle Memory",
+    description: "Lines of easy, generally used words are spoken aloud without showing any text on screen. Listen carefully and type blind directly on your 3D mechanical keyboard.",
+    icon: Headphones,
+    badgeColor: "bg-fuchsia-500 text-white",
+    gradient: "from-fuchsia-500/20 via-purple-500/10 to-transparent",
+    metrics: ["Hidden Words", "Spoken Easy Lines", "100% Muscle Memory", "Instant Reveal"],
+    buttonText: "PLAY BLIND TYPING",
   },
   {
     id: "speedtest",
