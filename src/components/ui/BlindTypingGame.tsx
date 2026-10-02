@@ -19,26 +19,89 @@ import {
   Headphones,
   Check,
   X,
+  Shuffle,
+  Layers,
 } from "lucide-react";
 
-// Curated library of natural, everyday conversational phrases with easy generally used words
-const BLIND_PHRASES = [
-  "the cat sat on the warm mat",
-  "keep your hands on the home keys",
-  "a cup of hot coffee on the desk",
-  "sunlight comes through the open window",
-  "typing without looking is fun and easy",
-  "listen to the voice and type the words",
-  "practice every day to build muscle memory",
-  "the quick brown fox jumped high",
-  "music plays softly in the quiet room",
-  "breathe easy and relax your fingers",
-  "focus on your rhythm and speed will follow",
-  "fresh water and cool morning air",
-  "take your time and do your best work",
-  "simple words make typing effortless",
-  "light rain taps gently on the roof",
-  "great work on trusting your fingers",
+export interface BlindPhraseItem {
+  id: number;
+  text: string;
+  tier: "5-10" | "10-15" | "15-20";
+}
+
+// Full 60 curated sentences across 3 word-length tiers
+export const ALL_BLIND_PHRASES: BlindPhraseItem[] = [
+  // -------------------------------------------------------------
+  // 5–10 Words (20 Sentences)
+  // -------------------------------------------------------------
+  { id: 1, tier: "5-10", text: "The morning sky looked bright and peaceful." },
+  { id: 2, tier: "5-10", text: "Keep your hands relaxed while typing." },
+  { id: 3, tier: "5-10", text: "A small bird landed near the window." },
+  { id: 4, tier: "5-10", text: "Practice makes typing faster and easier." },
+  { id: 5, tier: "5-10", text: "The train arrived exactly on time." },
+  { id: 6, tier: "5-10", text: "Fresh ideas often come from simple moments." },
+  { id: 7, tier: "5-10", text: "My keyboard feels smooth and comfortable." },
+  { id: 8, tier: "5-10", text: "The little garden was full of flowers." },
+  { id: 9, tier: "5-10", text: "Everyone enjoyed the quiet evening walk." },
+  { id: 10, tier: "5-10", text: "A cup of tea sat beside the laptop." },
+  { id: 11, tier: "5-10", text: "Stay hungry. Stay foolish." },
+  { id: 12, tier: "5-10", text: "It always seems impossible until it's done." },
+  { id: 13, tier: "5-10", text: "The future depends on what you do today." },
+  { id: 14, tier: "5-10", text: "Believe you can and you're halfway there." },
+  { id: 15, tier: "5-10", text: "Well done is better than well said." },
+  { id: 16, tier: "5-10", text: "Do what you can, with what you have." },
+  { id: 17, tier: "5-10", text: "The secret of getting ahead is getting started." },
+  { id: 18, tier: "5-10", text: "Success is not final, failure is not fatal." },
+  { id: 19, tier: "5-10", text: "Keep your face always toward the sunshine." },
+  { id: 20, tier: "5-10", text: "Great things never come from comfort zones." },
+
+  // -------------------------------------------------------------
+  // 10–15 Words (20 Sentences)
+  // -------------------------------------------------------------
+  { id: 21, tier: "10-15", text: "The old clock on the wall suddenly started ticking again." },
+  { id: 22, tier: "10-15", text: "She opened the window and watched the rain fall outside." },
+  { id: 23, tier: "10-15", text: "Learning something new becomes easier when practice becomes a daily habit." },
+  { id: 24, tier: "10-15", text: "The computer finished processing the file after several minutes of waiting." },
+  { id: 25, tier: "10-15", text: "A group of students gathered around the table to discuss their project." },
+  { id: 26, tier: "10-15", text: "The road was quiet except for a few passing vehicles." },
+  { id: 27, tier: "10-15", text: "He carefully checked every detail before submitting the final report." },
+  { id: 28, tier: "10-15", text: "The colorful lights made the small room feel warm and welcoming." },
+  { id: 29, tier: "10-15", text: "Sometimes the simplest solution is hidden behind a complicated problem." },
+  { id: 30, tier: "10-15", text: "The notebook contained several useful ideas written during yesterday's meeting." },
+  { id: 31, tier: "10-15", text: "The only way to do great work is to love what you do." },
+  { id: 32, tier: "10-15", text: "You miss one hundred percent of the shots you don't take." },
+  { id: 33, tier: "10-15", text: "If you can dream it, you can do it." },
+  { id: 34, tier: "10-15", text: "Great things are done by a series of small things brought together." },
+  { id: 35, tier: "10-15", text: "Don't watch the clock; do what it does. Keep going." },
+  { id: 36, tier: "10-15", text: "Hardships often prepare ordinary people for an extraordinary destiny." },
+  { id: 37, tier: "10-15", text: "It does not matter how slowly you go as long as you do not stop." },
+  { id: 38, tier: "10-15", text: "The best way to predict the future is to create it." },
+  { id: 39, tier: "10-15", text: "You have power over your mind, not outside events." },
+  { id: 40, tier: "10-15", text: "Success usually comes to those who are too busy to be looking for it." },
+
+  // -------------------------------------------------------------
+  // 15–20 Words (20 Sentences)
+  // -------------------------------------------------------------
+  { id: 41, tier: "15-20", text: "The student opened the laptop, connected to the internet, and started working on the assignment." },
+  { id: 42, tier: "15-20", text: "After completing the experiment, the team recorded their observations and discussed the results together." },
+  { id: 43, tier: "15-20", text: "The city becomes surprisingly peaceful late at night when most people have already returned home." },
+  { id: 44, tier: "15-20", text: "She organized all the files into separate folders so everything would be easier to find later." },
+  { id: 45, tier: "15-20", text: "A good typing speed comes from accuracy first, followed by consistent practice and gradual improvement." },
+  { id: 46, tier: "15-20", text: "The engineer carefully tested the circuit before connecting the final component to the power supply." },
+  { id: 47, tier: "15-20", text: "Every small mistake during practice provides an opportunity to understand the process and improve." },
+  { id: 48, tier: "15-20", text: "The weather changed suddenly, so everyone decided to finish the outdoor activity before evening." },
+  { id: 49, tier: "15-20", text: "He wrote down the important instructions because remembering every detail without notes was difficult." },
+  { id: 50, tier: "15-20", text: "The new system automatically stores the information and displays the results on the screen." },
+  { id: 51, tier: "15-20", text: "Our greatest glory is not in never falling, but in rising every time we fall." },
+  { id: 52, tier: "15-20", text: "Whether you think you can, or you think you can't - you're right." },
+  { id: 53, tier: "15-20", text: "The journey of a thousand miles begins with one step." },
+  { id: 54, tier: "15-20", text: "A person who never made a mistake never tried anything new." },
+  { id: 55, tier: "15-20", text: "Success is walking from failure to failure with no loss of enthusiasm." },
+  { id: 56, tier: "15-20", text: "You are never too old to set another goal or to dream a new dream." },
+  { id: 57, tier: "15-20", text: "Start where you are. Use what you have. Do what you can." },
+  { id: 58, tier: "15-20", text: "Opportunities don't happen. You create them." },
+  { id: 59, tier: "15-20", text: "The harder I work, the luckier I get." },
+  { id: 60, tier: "15-20", text: "There is no substitute for hard work." },
 ];
 
 type ValidationState = "typing" | "perfect" | "minor_errors" | "major_errors";
@@ -58,8 +121,21 @@ export function BlindTypingGame({
 }: BlindTypingGameProps) {
   const isDark = theme.isDark || theme.category === "Dark";
 
-  // Game state
-  const [phraseIndex, setPhraseIndex] = useState<number>(0);
+  // Tier filter: "all" | "5-10" | "10-15" | "15-20"
+  const [selectedTier, setSelectedTier] = useState<"all" | "5-10" | "10-15" | "15-20">("all");
+
+  const getFilteredPool = useCallback(() => {
+    if (selectedTier === "all") return ALL_BLIND_PHRASES;
+    return ALL_BLIND_PHRASES.filter((p) => p.tier === selectedTier);
+  }, [selectedTier]);
+
+  // Pick random sentence on start
+  const [currentPhraseObj, setCurrentPhraseObj] = useState<BlindPhraseItem>(() => {
+    const pool = ALL_BLIND_PHRASES;
+    const initialIndex = Math.floor(Math.random() * pool.length);
+    return pool[initialIndex] || pool[0];
+  });
+
   const [typedInput, setTypedInput] = useState<string>("");
   const [validationState, setValidationState] = useState<ValidationState>("typing");
   const [mistakesCount, setMistakesCount] = useState<number>(0);
@@ -68,12 +144,13 @@ export function BlindTypingGame({
   const [speechRate, setSpeechRate] = useState<number>(0.9);
   const [speechMode, setSpeechMode] = useState<"words" | "spelling">("words");
   const [streak, setStreak] = useState<number>(0);
+  const [totalCompleted, setTotalCompleted] = useState<number>(0);
   const [showHint, setShowHint] = useState<boolean>(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const currentPhrase = BLIND_PHRASES[phraseIndex % BLIND_PHRASES.length];
+  const currentPhrase = currentPhraseObj.text;
 
   // Helper to speak custom voice prompt
   const speakVoiceRemark = useCallback((text: string, onDone?: () => void) => {
@@ -123,7 +200,17 @@ export function BlindTypingGame({
     }
   }, [currentPhrase, speechRate, speechMode]);
 
-  // Reset and speak when moving to next phrase
+  // Pick next random sentence
+  const nextRandomPhrase = useCallback(() => {
+    const pool = getFilteredPool();
+    // Filter out current so it always changes
+    const otherPool = pool.filter((p) => p.id !== currentPhraseObj.id);
+    const candidatePool = otherPool.length > 0 ? otherPool : pool;
+    const randomIdx = Math.floor(Math.random() * candidatePool.length);
+    setCurrentPhraseObj(candidatePool[randomIdx]);
+  }, [getFilteredPool, currentPhraseObj]);
+
+  // Reset and speak when phrase changes
   useEffect(() => {
     setTypedInput("");
     setValidationState("typing");
@@ -144,7 +231,7 @@ export function BlindTypingGame({
         window.speechSynthesis.cancel();
       }
     };
-  }, [phraseIndex, speakCurrentPhrase]);
+  }, [currentPhraseObj, speakCurrentPhrase]);
 
   const resetCurrentPhrase = useCallback(() => {
     setTypedInput("");
@@ -158,10 +245,6 @@ export function BlindTypingGame({
     inputRef.current?.focus();
   }, [speakCurrentPhrase]);
 
-  const nextPhrase = useCallback(() => {
-    setPhraseIndex((prev) => (prev + 1) % BLIND_PHRASES.length);
-  }, []);
-
   // Keyboard shortcut listener for (Y / N) when minor error prompt is open
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -171,13 +254,13 @@ export function BlindTypingGame({
           resetCurrentPhrase();
         } else if (e.key.toLowerCase() === "n" || e.key === "Escape") {
           e.preventDefault();
-          nextPhrase();
+          nextRandomPhrase();
         }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [validationState, resetCurrentPhrase, nextPhrase]);
+  }, [validationState, resetCurrentPhrase, nextRandomPhrase]);
 
   // Check completion on input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,7 +270,7 @@ export function BlindTypingGame({
       setStartTime(Date.now());
     }
 
-    const val = e.target.value.toLowerCase();
+    const val = e.target.value;
     setTypedInput(val);
 
     const targetLength = currentPhrase.length;
@@ -198,13 +281,14 @@ export function BlindTypingGame({
       setEndTime(end);
 
       const trimmedVal = val.slice(0, targetLength);
-      const targetLower = currentPhrase.toLowerCase();
+      const targetStr = currentPhrase;
 
       let errors = 0;
       const errorIdxSet = new Set<number>();
 
       for (let i = 0; i < targetLength; i++) {
-        if (trimmedVal[i] !== targetLower[i]) {
+        // Case-insensitive letter matching for natural typing
+        if (trimmedVal[i].toLowerCase() !== targetStr[i].toLowerCase()) {
           errors++;
           errorIdxSet.add(i);
         }
@@ -217,6 +301,7 @@ export function BlindTypingGame({
         // CASE 1: 0 ERRORS -> PERFECT MATCH
         setValidationState("perfect");
         setStreak((prev) => prev + 1);
+        setTotalCompleted((prev) => prev + 1);
         soundEngine.playKeySound("Enter");
         speakVoiceRemark("Perfect match! Well done.");
       } else if (errors === 1 || errors === 2) {
@@ -295,6 +380,31 @@ export function BlindTypingGame({
           </div>
         </div>
 
+        {/* Word Length Filter Pills */}
+        <div className="hidden sm:flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-bold">
+          {[
+            { id: "all", label: "All Lengths (60)" },
+            { id: "5-10", label: "5–10 Words" },
+            { id: "10-15", label: "10–15 Words" },
+            { id: "15-20", label: "15–20 Words" },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => {
+                setSelectedTier(t.id as any);
+                nextRandomPhrase();
+              }}
+              className={`px-2.5 py-0.5 rounded-lg transition-all cursor-pointer ${
+                selectedTier === t.id
+                  ? "bg-purple-600 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
         {/* Right HUD Badges */}
         <div className="flex items-center gap-2">
           <div
@@ -365,7 +475,7 @@ export function BlindTypingGame({
                   ? "Not Perfect Match • Retype or Continue?"
                   : validationState === "major_errors"
                   ? "3+ Errors • Replaying line..."
-                  : `Audio Phrase #${phraseIndex + 1} (${wordCount} words)`}
+                  : `Random Dictation #${currentPhraseObj.id} (${wordCount} words • ${currentPhraseObj.tier} tier)`}
               </span>
             </span>
           </div>
@@ -415,12 +525,13 @@ export function BlindTypingGame({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                resetCurrentPhrase();
+                nextRandomPhrase();
               }}
-              className="p-1 rounded-lg text-slate-400 hover:text-purple-400 transition-colors cursor-pointer"
-              title="Reset phrase"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-[10px] font-bold transition-colors cursor-pointer"
+              title="Pick another random phrase"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <Shuffle className="w-3 h-3" />
+              <span>New Random</span>
             </button>
           </div>
         </div>
@@ -513,10 +624,10 @@ export function BlindTypingGame({
               </span>
 
               <button
-                onClick={nextPhrase}
+                onClick={nextRandomPhrase}
                 className="flex items-center gap-1 px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
-                <span>Next Phrase</span>
+                <span>Next Random Phrase</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -582,7 +693,7 @@ export function BlindTypingGame({
 
                 {/* NO Button */}
                 <button
-                  onClick={nextPhrase}
+                  onClick={nextRandomPhrase}
                   className="flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-black shadow-xs transition-all cursor-pointer"
                   title="Press 'N' or click to continue"
                 >
