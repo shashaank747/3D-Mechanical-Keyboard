@@ -306,7 +306,7 @@ export function Keyboard({
 
       // Attach finger to key
       if (plateRef.current) {
-        const keyElement = document.getElementById(`key-${code}`);
+        const keyElement = (plateRef.current.querySelector(`#key-${code}`) as HTMLElement) || document.getElementById(`key-${code}`);
         if (keyElement) {
           const plateRect = plateRef.current.getBoundingClientRect();
           const keyRect = keyElement.getBoundingClientRect();
@@ -358,10 +358,11 @@ export function Keyboard({
     const windowHeight = window.innerHeight || document.documentElement.clientHeight;
     const windowWidth = window.innerWidth || document.documentElement.clientWidth;
 
-    // Check if element has non-zero size and intersects the active visible viewport
+    // Element must exist, have dimensions, and intersect screen area
     const isInViewport =
-      rect.bottom > 40 &&
-      rect.top < windowHeight - 40 &&
+      rect.height > 0 &&
+      rect.bottom > -50 &&
+      rect.top < windowHeight + 50 &&
       rect.right > 0 &&
       rect.left < windowWidth;
 

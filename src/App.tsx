@@ -1151,6 +1151,7 @@ export default function KeyboardLandingPage() {
                 className="mx-auto scale-90 sm:scale-100"
                 theme={currentTheme}
                 colorZones={colorZones}
+                allowMouseClick={true}
                 onKeyPress={handleKeyTriggered}
                 onOpenThemeSidebar={() => setIsThemeSidebarOpen(true)}
               />
