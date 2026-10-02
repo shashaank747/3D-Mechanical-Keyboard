@@ -27,7 +27,7 @@ export function ThemeSidebar({
   onSelectTheme,
   currentPage = "home",
   onNavigate,
-  colorZones = true,
+  colorZones = false,
   onToggleColorZones,
 }: ThemeSidebarProps) {
   const [view, setView] = useState<"menu" | "settings">("menu");

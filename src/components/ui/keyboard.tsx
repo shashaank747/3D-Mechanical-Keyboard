@@ -252,7 +252,7 @@ export function Keyboard({
   interactive = true,
   allowMouseClick = false,
   theme = KEYBOARD_THEMES[0],
-  colorZones = true,
+  colorZones = false,
   onOpenThemeSidebar,
   testedKeys: externalTestedKeys,
   onTestedKeysChange,

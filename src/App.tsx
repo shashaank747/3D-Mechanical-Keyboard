@@ -48,7 +48,7 @@ export default function KeyboardLandingPage() {
   const [signupPassword, setSignupPassword] = useState("");
   const [loginWarningMessage, setLoginWarningMessage] = useState<string | null>(null);
 
-  const [colorZones, setColorZones] = useState<boolean>(true);
+  const [colorZones, setColorZones] = useState<boolean>(false);
   const [testedKeys, setTestedKeys] = useState<Set<string>>(new Set());
   const [lastTriggeredKey, setLastTriggeredKey] = useState<{ key: string; code: string; time: number } | null>(null);
   const [totalKeyHits, setTotalKeyHits] = useState<number>(0);
