@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { bgMusic } from "@/lib/bgMusic";
-import { Music, Play, Pause, Volume2, VolumeX, SkipForward, SkipBack } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 
 interface MusicPlayerProps {
   isDark: boolean;
@@ -25,21 +25,6 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
     });
     return () => unsubscribe();
   }, []);
-
-  const handleTogglePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    bgMusic.togglePlay();
-  };
-
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    bgMusic.nextTrack(true);
-  };
-
-  const handlePrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    bgMusic.prevTrack(true);
-  };
 
   const handleToggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -66,39 +51,6 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
             : "bg-white/80 border-slate-200 text-slate-600 hover:text-slate-900"
         }`}
       >
-        {/* Prev Track Trigger */}
-        <button
-          onClick={handlePrev}
-          className="p-1 rounded-full text-slate-400 hover:text-orange-500 transition-colors cursor-pointer"
-          title="Previous Track"
-        >
-          <SkipBack className="w-3 h-3" />
-        </button>
-
-        {/* Play / Pause Trigger */}
-        <button
-          onClick={handleTogglePlay}
-          className={`p-1.5 rounded-full transition-all cursor-pointer flex items-center justify-center ${
-            isPlaying
-              ? "bg-orange-500 text-white shadow-xs hover:scale-110"
-              : isDark
-              ? "bg-slate-800 hover:bg-slate-700 text-slate-300"
-              : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-          }`}
-          title={isPlaying ? `Pause (${currentTrack.title})` : `Play (${currentTrack.title})`}
-        >
-          {isPlaying ? <Pause className="w-3 h-3 fill-white" /> : <Play className="w-3 h-3 fill-current ml-0.5" />}
-        </button>
-
-        {/* Next Track Trigger */}
-        <button
-          onClick={handleNext}
-          className="p-1 rounded-full text-slate-400 hover:text-orange-500 transition-colors cursor-pointer"
-          title="Next Track"
-        >
-          <SkipForward className="w-3 h-3" />
-        </button>
-
         {/* Animated Soundwave Visualizer Bars */}
         <div className="flex items-end gap-0.5 h-3.5 px-0.5">
           {[
@@ -126,11 +78,10 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
 
         {/* Track Title */}
         <div
-          onClick={handleTogglePlay}
-          className="flex items-center gap-1.5 cursor-pointer select-none"
-          title={currentTrack.title}
+          className="flex items-center gap-1.5 select-none"
+          title={`Now Playing: ${currentTrack.title}`}
         >
-          <span className="text-[11px] font-bold tracking-tight truncate max-w-[130px] sm:max-w-[160px]">
+          <span className="text-[11px] font-bold tracking-tight truncate max-w-[130px] sm:max-w-[170px]">
             {currentTrack.title}
           </span>
         </div>
