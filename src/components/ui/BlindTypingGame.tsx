@@ -1,27 +1,20 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Keyboard from "./keyboard";
 import type { KeyboardTheme } from "@/lib/themes";
 import { soundEngine } from "@/lib/sound";
 import {
   Volume2,
-  VolumeX,
   EyeOff,
   Sparkles,
   ArrowLeft,
   RotateCcw,
-  Play,
-  Pause,
   CheckCircle2,
   Flame,
-  Award,
   ChevronRight,
-  ShieldAlert,
   Headphones,
-  Sliders,
-  HelpCircle,
 } from "lucide-react";
 
 // Curated library of natural, everyday conversational phrases with easy generally used words
@@ -64,10 +57,9 @@ export function BlindTypingGame({
   const [typedInput, setTypedInput] = useState<string>("");
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
-  const [speechRate, setSpeechRate] = useState<number>(0.9); // Gentle, clear speed
+  const [speechRate, setSpeechRate] = useState<number>(0.9);
   const [speechMode, setSpeechMode] = useState<"words" | "spelling">("words");
   const [streak, setStreak] = useState<number>(0);
-  const [totalCompleted, setTotalCompleted] = useState<number>(0);
   const [showHint, setShowHint] = useState<boolean>(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
@@ -82,7 +74,6 @@ export function BlindTypingGame({
     window.speechSynthesis.cancel();
 
     if (speechMode === "spelling") {
-      // Spell out letters with spaces
       const spelledText = currentPhrase
         .split("")
         .map((ch) => (ch === " " ? " space " : ` ${ch} `))
@@ -95,7 +86,6 @@ export function BlindTypingGame({
       utter.onerror = () => setIsSpeaking(false);
       window.speechSynthesis.speak(utter);
     } else {
-      // Speak full natural sentence
       const utter = new SpeechSynthesisUtterance(currentPhrase);
       utter.rate = speechRate;
       utter.pitch = 1.0;
@@ -117,7 +107,7 @@ export function BlindTypingGame({
     const timer = setTimeout(() => {
       speakCurrentPhrase();
       inputRef.current?.focus();
-    }, 400);
+    }, 350);
 
     return () => {
       clearTimeout(timer);
@@ -138,7 +128,6 @@ export function BlindTypingGame({
     const val = e.target.value.toLowerCase();
     setTypedInput(val);
 
-    // Normalize comparison
     if (val.trim() === currentPhrase.toLowerCase().trim()) {
       finishPhrase(val);
     }
@@ -148,20 +137,17 @@ export function BlindTypingGame({
     const end = Date.now();
     setEndTime(end);
     setIsCompleted(true);
-    setTotalCompleted((prev) => prev + 1);
     setStreak((prev) => prev + 1);
 
-    // Play victory chime
     soundEngine.playKeySound("Enter");
 
-    // Speak celebratory remark
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       setTimeout(() => {
-        const cheerUtter = new SpeechSynthesisUtterance("Perfect match! Well done.");
+        const cheerUtter = new SpeechSynthesisUtterance("Perfect match!");
         cheerUtter.rate = 1.1;
         cheerUtter.pitch = 1.2;
         window.speechSynthesis.speak(cheerUtter);
-      }, 300);
+      }, 250);
     }
   };
 
@@ -179,12 +165,11 @@ export function BlindTypingGame({
     inputRef.current?.focus();
   };
 
-  // Keyboard key press integration
   const handleVirtualKeyPress = (label: string, code: string) => {
     inputRef.current?.focus();
   };
 
-  // Compute live accuracy & metrics
+  // Compute live metrics
   const targetChars = currentPhrase.split("");
   const typedChars = typedInput.split("");
   let correctCount = 0;
@@ -194,14 +179,13 @@ export function BlindTypingGame({
     }
   }
   const accuracy = typedChars.length > 0 ? Math.round((correctCount / typedChars.length) * 100) : 100;
-
   const durationSec = startTime && endTime ? Math.max(1, (endTime - startTime) / 1000) : 1;
   const wordCount = currentPhrase.split(" ").length;
   const wpm = Math.round((wordCount / durationSec) * 60);
 
   return (
-    <div className="relative z-10 w-full max-w-5xl px-3 sm:px-6 py-6 flex flex-col items-center gap-6 animate-in fade-in duration-300">
-      {/* Hidden focused input to capture all physical typing smoothly */}
+    <div className="relative z-10 w-full max-w-5xl px-3 sm:px-6 py-2 flex flex-col items-center gap-3 animate-in fade-in duration-300">
+      {/* Hidden focused input */}
       <input
         ref={inputRef}
         type="text"
@@ -217,11 +201,11 @@ export function BlindTypingGame({
 
       {/* Top Header Bar */}
       <div
-        className={`w-full flex items-center justify-between pb-3 border-b ${
+        className={`w-full flex items-center justify-between pb-2 border-b ${
           isDark ? "border-slate-800" : "border-slate-200"
         }`}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={onBackToHub}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
@@ -234,29 +218,20 @@ export function BlindTypingGame({
             <span>Games Hub</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="p-1.5 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
-              <EyeOff className="w-4 h-4" />
+              <EyeOff className="w-3.5 h-3.5" />
             </span>
-            <div>
-              <h1
-                className={`text-base sm:text-lg font-black tracking-tight ${
-                  isDark ? "text-white" : "text-slate-900"
-                }`}
-              >
-                Blind Typing Dojo
-              </h1>
-              <p className="text-[11px] text-slate-500">
-                Pure Audio Dictation • Words are hidden until you finish
-              </p>
-            </div>
+            <span className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              Blind Typing
+            </span>
           </div>
         </div>
 
         {/* Right HUD Badges */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <div
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-mono font-bold ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-xl border text-xs font-mono font-bold ${
               isDark
                 ? "bg-slate-900 border-slate-800 text-purple-300"
                 : "bg-purple-50 border-purple-200 text-purple-900"
@@ -275,62 +250,59 @@ export function BlindTypingGame({
             }`}
             title="Themes"
           >
-            <Sparkles className="w-4 h-4 text-orange-500" />
+            <Sparkles className="w-3.5 h-3.5 text-orange-500" />
           </button>
         </div>
       </div>
 
-      {/* Main Blindfold Audio Card */}
+      {/* Ultra-Compact Audio HUD Card */}
       <div
         onClick={() => inputRef.current?.focus()}
-        className={`w-full p-6 sm:p-8 rounded-3xl border shadow-2xl backdrop-blur-xl flex flex-col items-center gap-5 transition-all cursor-text ${
+        className={`w-full px-4 py-3 rounded-2xl border shadow-lg backdrop-blur-md flex flex-col gap-2.5 transition-all cursor-text ${
           isDark
-            ? "bg-slate-900/90 border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.12)] text-white"
-            : "bg-white/95 border-purple-200 shadow-[0_0_30px_rgba(168,85,247,0.08)] text-slate-900"
+            ? "bg-slate-900/90 border-purple-500/30 text-white"
+            : "bg-white/95 border-purple-200 text-slate-900"
         }`}
       >
-        {/* Blindfold Audio Header Controls */}
-        <div className="w-full flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-purple-500/20">
-          {/* Spoken Status Banner */}
+        {/* Controls Row */}
+        <div className="w-full flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
+            <span className="relative flex h-2.5 w-2.5">
               {isSpeaking && (
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
               )}
               <span
-                className={`relative inline-flex rounded-full h-3 w-3 ${
+                className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
                   isSpeaking ? "bg-purple-500" : "bg-slate-400"
                 }`}
               ></span>
             </span>
-            <span className="text-xs font-black uppercase tracking-wider text-purple-400">
-              {isSpeaking ? "Speaking Audio..." : "Listening • Type What You Heard"}
+            <span className="text-[11px] font-black uppercase tracking-wider text-purple-400 flex items-center gap-1">
+              <Headphones className="w-3 h-3" />
+              <span>{isSpeaking ? "Speaking Audio..." : `Audio Phrase #${phraseIndex + 1} (${wordCount} words)`}</span>
             </span>
           </div>
 
-          {/* Voice Action Triggers */}
-          <div className="flex items-center gap-2">
-            {/* Replay Audio Button */}
+          <div className="flex items-center gap-1.5">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 speakCurrentPhrase();
                 inputRef.current?.focus();
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
               title="Hear the phrase again"
             >
-              <Volume2 className="w-3.5 h-3.5" />
+              <Volume2 className="w-3 h-3" />
               <span>Hear Again</span>
             </button>
 
-            {/* Read Words vs Spell Letters Toggle */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setSpeechMode((prev) => (prev === "words" ? "spelling" : "words"));
               }}
-              className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
+              className={`px-2 py-1 rounded-lg border text-[10px] font-bold transition-all cursor-pointer ${
                 speechMode === "spelling"
                   ? "bg-purple-500/20 border-purple-400 text-purple-300"
                   : isDark
@@ -338,78 +310,39 @@ export function BlindTypingGame({
                   : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
               }`}
             >
-              Mode: {speechMode === "words" ? "Read Words" : "Spell Letters"}
+              Mode: {speechMode === "words" ? "Words" : "Spell"}
             </button>
 
-            {/* Speech Rate Cycle */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setSpeechRate((prev) => (prev === 0.75 ? 0.95 : prev === 0.95 ? 1.15 : 0.75));
               }}
-              className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-mono font-bold transition-all cursor-pointer ${
+              className={`px-2 py-1 rounded-lg border text-[10px] font-mono font-bold transition-all cursor-pointer ${
                 isDark ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-slate-100 border-slate-200 text-slate-700"
               }`}
-              title="Speech Speed"
             >
-              {speechRate === 0.75 ? "0.75x (Slow)" : speechRate === 0.95 ? "1.0x (Normal)" : "1.2x (Fast)"}
+              {speechRate === 0.75 ? "0.75x" : speechRate === 0.95 ? "1.0x" : "1.2x"}
             </button>
 
-            {/* Reset Current */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 resetCurrentPhrase();
               }}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-purple-400 transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-slate-400 hover:text-purple-400 transition-colors cursor-pointer"
               title="Reset phrase"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Central Audio / Soundwave Orb (Zero Screen Text While Active) */}
+        {/* Masked Slots Track or Completion Row */}
         {!isCompleted ? (
-          <div className="w-full flex flex-col items-center justify-center py-6 gap-5">
-            {/* Animated Soundwave Visualizer Circle */}
-            <div className="relative flex items-center justify-center">
-              <motion.div
-                animate={{
-                  scale: isSpeaking ? [1, 1.15, 1] : [1, 1.04, 1],
-                  opacity: isSpeaking ? [0.6, 0.9, 0.6] : [0.3, 0.45, 0.3],
-                }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-500 to-pink-500 blur-xl absolute"
-              />
-
-              <div
-                className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 flex items-center justify-center shadow-inner ${
-                  isDark
-                    ? "bg-slate-950 border-purple-500/50 text-purple-400"
-                    : "bg-white border-purple-300 text-purple-600"
-                }`}
-              >
-                {isSpeaking ? (
-                  <Headphones className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
-                ) : (
-                  <EyeOff className="w-8 h-8 sm:w-10 sm:h-10 opacity-80" />
-                )}
-              </div>
-            </div>
-
-            {/* Phrase Info Hint (Without revealing letters) */}
-            <div className="text-center space-y-1">
-              <div className="text-xs font-mono font-bold uppercase tracking-widest text-purple-400">
-                Audio Dictation #{phraseIndex + 1} • {currentPhrase.split(" ").length} Words Spoken
-              </div>
-              <p className="text-xs text-slate-500 max-w-md">
-                Words are completely hidden. Listen carefully to the voice and type the sentence directly on your mechanical keyboard.
-              </p>
-            </div>
-
-            {/* Blindfold Masked Letter Slots / Progress HUD */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5 max-w-xl p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20">
+          <div className="w-full flex flex-col items-center gap-1.5 pt-1 border-t border-purple-500/10">
+            {/* Masked Dots Progress Bar */}
+            <div className="w-full flex flex-wrap items-center justify-center gap-1 p-2 rounded-xl bg-purple-500/5 border border-purple-500/15">
               {targetChars.map((char, idx) => {
                 const isTyped = idx < typedChars.length;
                 const isSpace = char === " ";
@@ -418,7 +351,7 @@ export function BlindTypingGame({
                   return (
                     <div
                       key={idx}
-                      className="w-3 h-7 flex items-center justify-center text-slate-400 opacity-30 font-mono text-xs"
+                      className="w-2 h-5 flex items-center justify-center text-slate-400 opacity-40 font-mono text-[10px]"
                     >
                       ␣
                     </div>
@@ -428,13 +361,13 @@ export function BlindTypingGame({
                 return (
                   <div
                     key={idx}
-                    className={`w-6 h-7 rounded-lg flex items-center justify-center font-mono text-xs font-black transition-all ${
+                    className={`w-4 h-5 rounded flex items-center justify-center font-mono text-[10px] font-bold transition-all ${
                       isTyped
                         ? isDark
-                          ? "bg-purple-500/30 text-purple-300 border border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.3)]"
-                          : "bg-purple-100 text-purple-800 border border-purple-300"
+                          ? "bg-purple-500/40 text-purple-300 border border-purple-400 shadow-xs"
+                          : "bg-purple-200 text-purple-900 border border-purple-300"
                         : isDark
-                        ? "bg-slate-950/70 border border-slate-800 text-slate-600"
+                        ? "bg-slate-950/60 border border-slate-800 text-slate-600"
                         : "bg-slate-100 border border-slate-200 text-slate-400"
                     }`}
                   >
@@ -444,94 +377,62 @@ export function BlindTypingGame({
               })}
             </div>
 
-            {/* Hint & Helper Row */}
-            <div className="flex items-center gap-4 text-xs font-mono">
+            {/* Bottom Progress & Peek Trigger */}
+            <div className="w-full flex items-center justify-between text-[11px] font-mono px-1">
               <span className="text-slate-400">
                 Progress: <strong className="text-purple-400">{typedChars.length}</strong> / {targetChars.length} chars
               </span>
-              <span>•</span>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowHint((prev) => !prev);
                 }}
-                className="text-slate-500 hover:text-purple-400 underline transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-purple-400 underline transition-colors cursor-pointer text-[10px]"
               >
-                {showHint ? "Hide Peek" : "Peek Typed Letters"}
+                {showHint ? "Hide Peek" : "Peek Letters"}
               </button>
             </div>
           </div>
         ) : (
-          /* Reveal View upon Finishing */
+          /* Sleek Revealed Phrase & Next Button */
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full flex flex-col items-center gap-5 py-4"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-emerald-500/20"
           >
-            <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm uppercase tracking-wider">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              <span>Sentence Completed Successfully!</span>
-            </div>
-
-            {/* Revealed Phrase Text with Green/Red Highlight */}
-            <div
-              className={`w-full p-4 rounded-2xl border text-center font-mono text-lg font-black tracking-wide leading-relaxed ${
-                isDark ? "bg-slate-950 border-emerald-500/40 text-white" : "bg-emerald-50 border-emerald-300 text-slate-900"
-              }`}
-            >
-              {currentPhrase}
-            </div>
-
-            {/* Performance Stats Cards */}
-            <div className="grid grid-cols-3 gap-3 w-full max-w-md">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <div
-                className={`p-3 rounded-2xl border text-center ${
-                  isDark ? "bg-slate-950/70 border-slate-800" : "bg-slate-50 border-slate-200"
+                className={`px-3 py-1 rounded-xl font-mono text-xs font-bold border ${
+                  isDark ? "bg-slate-950 text-emerald-300 border-emerald-500/40" : "bg-emerald-50 text-emerald-900 border-emerald-300"
                 }`}
               >
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
-                  WPM Speed
-                </span>
-                <span className="text-2xl font-black font-mono text-orange-500">{wpm}</span>
-              </div>
-
-              <div
-                className={`p-3 rounded-2xl border text-center ${
-                  isDark ? "bg-slate-950/70 border-slate-800" : "bg-slate-50 border-slate-200"
-                }`}
-              >
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
-                  Accuracy
-                </span>
-                <span className="text-2xl font-black font-mono text-emerald-400">{accuracy}%</span>
-              </div>
-
-              <div
-                className={`p-3 rounded-2xl border text-center ${
-                  isDark ? "bg-slate-950/70 border-slate-800" : "bg-slate-50 border-slate-200"
-                }`}
-              >
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
-                  Time
-                </span>
-                <span className="text-2xl font-black font-mono text-purple-400">{durationSec.toFixed(1)}s</span>
+                {currentPhrase}
               </div>
             </div>
 
-            {/* Next Action Button */}
-            <button
-              onClick={nextPhrase}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            >
-              <span>Next Spoken Phrase</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold text-orange-500 px-2 py-0.5 rounded bg-orange-500/10">
+                {wpm} WPM
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10">
+                {accuracy}%
+              </span>
+
+              <button
+                onClick={nextPhrase}
+                className="flex items-center gap-1 px-3 py-1 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              >
+                <span>Next Phrase</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </motion.div>
         )}
       </div>
 
-      {/* Prominent 3D Mechanical Keyboard View */}
-      <div className="w-full flex items-center justify-center p-2 sm:p-4 mt-2">
+      {/* Prominent 3D Mechanical Keyboard Front and Center */}
+      <div className="flex w-full items-center justify-center p-0 sm:p-2">
         <Keyboard
           className="mx-auto"
           theme={theme}
