@@ -203,6 +203,7 @@ export function ExplodedKeyboardScroll({
                 className="mx-auto"
                 theme={theme}
                 colorZones={colorZones}
+                interactive={isFullyAssembled}
                 testedKeys={testedKeys}
                 onTestedKeysChange={onTestedKeysChange}
                 onOpenThemeSidebar={onOpenThemeSidebar}

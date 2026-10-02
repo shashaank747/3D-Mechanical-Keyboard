@@ -351,11 +351,35 @@ export function Keyboard({
     }
   }, []);
 
+  // Helper to determine if the 3D keyboard is genuinely visible in the viewport
+  const isKeyboardVisible = useCallback(() => {
+    if (!plateRef.current) return false;
+    const rect = plateRef.current.getBoundingClientRect();
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+
+    // Check if element has non-zero size and intersects the active visible viewport
+    const isInViewport =
+      rect.bottom > 40 &&
+      rect.top < windowHeight - 40 &&
+      rect.right > 0 &&
+      rect.left < windowWidth;
+
+    // Check computed style visibility
+    const style = window.getComputedStyle(plateRef.current);
+    const isStyleVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+
+    return isInViewport && isStyleVisible;
+  }, []);
+
   // Global physical keyboard listener
   useEffect(() => {
     if (!interactive) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // ONLY trigger mechanical switch audio and key tracking if the keyboard is visible on screen
+      if (!isKeyboardVisible()) return;
+
       // Prevent browser default page movement for navigation keys ONLY when in keyboard test mode
       if (isTestMode) {
         const navKeys = [
@@ -385,6 +409,9 @@ export function Keyboard({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      // ONLY trigger key release audio and state if the keyboard is visible
+      if (!isKeyboardVisible()) return;
+
       if (isTestMode) {
         const navKeys = [
           "PageUp", "PageDown", "Home", "End",
@@ -415,7 +442,7 @@ export function Keyboard({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [interactive, isTestMode, pressKey, releaseKey]);
+  }, [interactive, isTestMode, pressKey, releaseKey, isKeyboardVisible]);
 
   const handleVirtualKeyDown = (key: KeyItem) => {
     if (key.code === "CapsLock") {
