@@ -19,8 +19,6 @@ import {
   Headphones,
   Check,
   X,
-  Shuffle,
-  Layers,
 } from "lucide-react";
 
 export interface BlindPhraseItem {
@@ -380,30 +378,7 @@ export function BlindTypingGame({
           </div>
         </div>
 
-        {/* Word Length Filter Pills */}
-        <div className="hidden sm:flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-bold">
-          {[
-            { id: "all", label: "All Lengths (60)" },
-            { id: "5-10", label: "5–10 Words" },
-            { id: "10-15", label: "10–15 Words" },
-            { id: "15-20", label: "15–20 Words" },
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => {
-                setSelectedTier(t.id as any);
-                nextRandomPhrase();
-              }}
-              className={`px-2.5 py-0.5 rounded-lg transition-all cursor-pointer ${
-                selectedTier === t.id
-                  ? "bg-purple-600 text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+
 
         {/* Right HUD Badges */}
         <div className="flex items-center gap-2">
@@ -520,18 +495,6 @@ export function BlindTypingGame({
               }`}
             >
               {speechRate === 0.75 ? "0.75x" : speechRate === 0.95 ? "1.0x" : "1.2x"}
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                nextRandomPhrase();
-              }}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-[10px] font-bold transition-colors cursor-pointer"
-              title="Pick another random phrase"
-            >
-              <Shuffle className="w-3 h-3" />
-              <span>New Random</span>
             </button>
           </div>
         </div>
