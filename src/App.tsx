@@ -17,9 +17,10 @@ import {
   Keyboard as KeyboardIcon, Sparkles, 
   Check, RotateCcw, Flame, Palette,
   Play, ArrowLeft, ArrowDown, BookOpen, Layers, Menu,
-  Volume2, Gamepad2
+  Volume2, Gamepad2, ShieldCheck
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { soundEngine } from "@/lib/sound";
 
 export type AppPage = "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "shortcuts";
 
@@ -47,8 +48,75 @@ export default function KeyboardLandingPage() {
   const [wpm, setWpm] = useState<number | null>(null);
   const [accuracy, setAccuracy] = useState<number>(100);
   const autoNextTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const keyboardSectionRef = useRef<HTMLDivElement | null>(null);
+
+  // Shortcuts Dojo state
+  const [testedShortcuts, setTestedShortcuts] = useState<Set<string>>(new Set());
+  const [activeShortcutCombo, setActiveShortcutCombo] = useState<string | null>(null);
+
+  // Intercept & Disable Browser Default Shortcuts specifically when Shortcuts Dojo is Active
+  useEffect(() => {
+    if (currentPage !== "shortcuts") return;
+
+    const handleShortcutsKeyDown = (e: KeyboardEvent) => {
+      // Modifiers and combinations that normally trigger browser dialogs (e.g. Ctrl+P, Ctrl+S, Ctrl+F, Ctrl+O, etc.)
+      const isModifierCombo = e.ctrlKey || e.altKey || e.metaKey;
+      const isFunctionKey = e.key.startsWith("F") && e.key.length <= 3;
+
+      if (isModifierCombo || isFunctionKey) {
+        // PREVENT BROWSER DEFAULT ACTIONS (Print dialog, Save dialog, Page search, etc.)
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      // Format pressed combination
+      const parts: string[] = [];
+      if (e.ctrlKey) parts.push("Ctrl");
+      if (e.altKey) parts.push("Alt");
+      if (e.shiftKey) parts.push("Shift");
+      if (e.metaKey) parts.push("Windows");
+
+      let mainKey = e.key.toUpperCase();
+      if (e.code === "Space") mainKey = "Space";
+      if (e.code === "Tab") mainKey = "Tab";
+      if (e.code === "Escape") mainKey = "Esc";
+      if (e.code === "Period") mainKey = ".";
+      if (e.code === "Slash") mainKey = "/";
+
+      // Exclude modifier-only key presses
+      const modifierKeys = ["CONTROL", "ALT", "SHIFT", "META"];
+      if (!modifierKeys.includes(mainKey)) {
+        parts.push(mainKey);
+      }
+
+      if (parts.length > 0) {
+        const comboStr = parts.join(" + ");
+        setActiveShortcutCombo(comboStr);
+
+        // Normalize match against shortcut list
+        const SHORTCUTS_REF = [
+          "Ctrl + C", "Ctrl + V", "Ctrl + Z", "Ctrl + P", "Ctrl + S", "Ctrl + F",
+          "Ctrl + Shift + P", "Ctrl + A", "Ctrl + Shift + T", "Alt + Tab", "Windows + .", "Ctrl + K"
+        ];
+
+        const matched = SHORTCUTS_REF.find((s) => {
+          const sNormalized = s.toLowerCase().replace(/\s+/g, "");
+          const comboNormalized = comboStr.toLowerCase().replace(/\s+/g, "");
+          return sNormalized === comboNormalized;
+        });
+
+        if (matched) {
+          setTestedShortcuts((prev) => new Set(prev).add(matched));
+          soundEngine.playKeySound(mainKey);
+        }
+
+        handleKeyTriggered(mainKey, e.code);
+      }
+    };
+
+    window.addEventListener("keydown", handleShortcutsKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", handleShortcutsKeyDown, { capture: true });
+  }, [currentPage]);
 
   // Cleanup pending timer on unmount
   useEffect(() => {
@@ -521,29 +589,111 @@ export default function KeyboardLandingPage() {
           <div className={`w-full p-6 sm:p-8 border rounded-3xl shadow-2xl flex flex-col gap-6 backdrop-blur-md ${
             isDark ? "bg-slate-900/95 border-slate-800 text-white" : "bg-white/95 border-slate-200 text-slate-900"
           }`}>
+            {/* Safe Sandbox Active Status Banner */}
+            <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+              isDark ? "bg-emerald-950/40 border-emerald-800/60 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-900"
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider block">
+                    Browser Shortcut Override Enabled
+                  </span>
+                  <p className="text-xs opacity-85">
+                    Browser hotkeys (such as <strong>Ctrl + P</strong> for print, <strong>Ctrl + S</strong> for save, and <strong>Ctrl + F</strong> for find) are intercepted safely inside the dojo.
+                  </p>
+                </div>
+              </div>
+
+              {/* Live Practiced Counter */}
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
+                  {testedShortcuts.size} / 12 Practiced
+                </span>
+                {testedShortcuts.size > 0 && (
+                  <button
+                    onClick={() => setTestedShortcuts(new Set())}
+                    className="p-1.5 rounded-lg hover:bg-emerald-500/20 text-emerald-400 transition-colors cursor-pointer"
+                    title="Reset Practice"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Live Pressed Hotkey HUD */}
+            <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+              isDark ? "bg-slate-950 border-slate-800" : "bg-slate-50 border-slate-200"
+            }`}>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Hotkey Input:</span>
+                {activeShortcutCombo ? (
+                  <span className="font-mono text-sm font-black px-3 py-1 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 animate-pulse">
+                    {activeShortcutCombo}
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-400 italic">Press any shortcut keys on your keyboard...</span>
+                )}
+              </div>
+              <span className="text-[10px] font-mono text-slate-400 hidden sm:inline">Tactile feedback active</span>
+            </div>
+
+            {/* Shortcuts Practice Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
               {[
                 { key: "Ctrl + C", desc: "Copy Selection" },
                 { key: "Ctrl + V", desc: "Paste Clipboard" },
                 { key: "Ctrl + Z", desc: "Undo Action" },
+                { key: "Ctrl + P", desc: "Quick Print / File Open (Safe)" },
+                { key: "Ctrl + S", desc: "Save File / Commit (Safe)" },
+                { key: "Ctrl + F", desc: "Find in Page (Safe)" },
                 { key: "Ctrl + Shift + P", desc: "Command Palette" },
-                { key: "Alt + Tab", desc: "Switch Applications" },
-                { key: "Windows + .", desc: "Emoji Picker" },
-                { key: "Ctrl + F", desc: "Find in Page" },
                 { key: "Ctrl + A", desc: "Select All" },
                 { key: "Ctrl + Shift + T", desc: "Reopen Closed Tab" },
-              ].map((sc, i) => (
-                <div key={i} className={`flex items-center justify-between p-3.5 rounded-2xl border transition-colors ${
-                  isDark ? "bg-slate-950/80 border-slate-800 hover:border-slate-700 text-slate-200" : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-800"
-                }`}>
-                  <span className={`px-3 py-1.5 rounded-xl border font-mono text-xs font-bold shadow-xs ${
-                    isDark ? "bg-slate-900 border-slate-700 text-cyan-400" : "bg-white border-slate-300 text-slate-800"
-                  }`}>
-                    {sc.key}
-                  </span>
-                  <span className={`text-xs font-semibold ${isDark ? "text-slate-300" : "text-slate-600"}`}>{sc.desc}</span>
-                </div>
-              ))}
+                { key: "Alt + Tab", desc: "Switch Applications" },
+                { key: "Windows + .", desc: "Emoji Picker" },
+                { key: "Ctrl + K", desc: "Quick Search / Command" },
+              ].map((sc, i) => {
+                const isPracticed = testedShortcuts.has(sc.key);
+                return (
+                  <div
+                    key={i}
+                    className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
+                      isPracticed
+                        ? isDark
+                          ? "bg-emerald-950/40 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.15)] text-white"
+                          : "bg-emerald-50 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)] text-slate-900"
+                        : isDark
+                        ? "bg-slate-950/80 border-slate-800 hover:border-slate-700 text-slate-200"
+                        : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-800"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className={`px-2.5 py-1 rounded-xl border font-mono text-xs font-bold shadow-xs ${
+                        isPracticed
+                          ? "bg-emerald-500 text-white border-emerald-400"
+                          : isDark
+                          ? "bg-slate-900 border-slate-700 text-cyan-400"
+                          : "bg-white border-slate-300 text-slate-800"
+                      }`}>
+                        {sc.key}
+                      </span>
+                      <span className={`text-xs font-semibold ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                        {sc.desc}
+                      </span>
+                    </div>
+
+                    {isPracticed && (
+                      <span className="p-1 rounded-full bg-emerald-500/20 text-emerald-400 shrink-0">
+                        <Check className="w-3.5 h-3.5" />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
