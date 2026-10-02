@@ -21,6 +21,8 @@ import {
   Volume2,
   ShieldCheck,
   Check,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -887,11 +889,60 @@ export function KeyboardGame({
   const [categoryFilter, setCategoryFilter] = useState<"all" | "foundation" | "left_hand" | "right_hand">("all");
   const [currentLevelIndex, setCurrentLevelIndex] = useState<number>(0);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
-  const [unlockedLevels, setUnlockedLevels] = useState<Set<number>>(new Set(GAME_LEVELS.map((l) => l.id)));
-  const [completedLevels, setCompletedLevels] = useState<Set<number>>(new Set());
+
+  // Progressive Level Unlocking: Level 1 is unlocked initially, subsequent levels unlock upon completion
+  const [unlockedLevels, setUnlockedLevels] = useState<Set<number>>(() => {
+    try {
+      const saved = localStorage.getItem("typing_academy_unlocked_levels");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return new Set(parsed);
+        }
+      }
+    } catch {}
+    return new Set([1]); // Level 1 is unlocked initially
+  });
+
+  const [completedLevels, setCompletedLevels] = useState<Set<number>>(() => {
+    try {
+      const saved = localStorage.getItem("typing_academy_completed_levels");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return new Set(parsed);
+      }
+    } catch {}
+    return new Set();
+  });
+
   const [levelStats, setLevelStats] = useState<
     Record<number, { completed: boolean; accuracy: number; maxStreak: number }>
-  >({});
+  >(() => {
+    try {
+      const saved = localStorage.getItem("typing_academy_level_stats");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {};
+  });
+
+  // Sync to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("typing_academy_unlocked_levels", JSON.stringify(Array.from(unlockedLevels)));
+    } catch {}
+  }, [unlockedLevels]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("typing_academy_completed_levels", JSON.stringify(Array.from(completedLevels)));
+    } catch {}
+  }, [completedLevels]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("typing_academy_level_stats", JSON.stringify(levelStats));
+    } catch {}
+  }, [levelStats]);
 
   // Score & Analytics
   const [streak, setStreak] = useState<number>(0);
@@ -920,8 +971,10 @@ export function KeyboardGame({
     return true;
   });
 
-  // Start a specific level
+  // Start a specific level (only if unlocked)
   const startLevel = (index: number) => {
+    const lvl = GAME_LEVELS[index];
+    if (!lvl || !unlockedLevels.has(lvl.id)) return;
     setCurrentLevelIndex(index);
     setCurrentStepIndex(0);
     setStreak(0);
@@ -951,9 +1004,10 @@ export function KeyboardGame({
       },
     }));
 
-    // Unlock next level
+    // Unlock next level upon completing this one!
     if (currentLevelIndex + 1 < GAME_LEVELS.length) {
-      setUnlockedLevels((prev) => new Set(prev).add(GAME_LEVELS[currentLevelIndex + 1].id));
+      const nextLvlId = GAME_LEVELS[currentLevelIndex + 1].id;
+      setUnlockedLevels((prev) => new Set(prev).add(nextLvlId));
     }
 
     try {
@@ -1036,9 +1090,21 @@ export function KeyboardGame({
 
   const nextLevel = () => {
     if (currentLevelIndex + 1 < GAME_LEVELS.length) {
-      startLevel(currentLevelIndex + 1);
+      const nextIdx = currentLevelIndex + 1;
+      const nextLvl = GAME_LEVELS[nextIdx];
+      setUnlockedLevels((prev) => new Set(prev).add(nextLvl.id));
+      setCurrentLevelIndex(nextIdx);
+      setCurrentStepIndex(0);
+      setStreak(0);
+      setMaxStreak(0);
+      setMistakes(0);
+      setCorrectHits(0);
+      setStartTime(Date.now());
+      setShowLevelCompleteModal(false);
+      setGameView("play");
     } else {
-      startLevel(0);
+      setShowLevelCompleteModal(false);
+      setGameView("select");
     }
   };
 
@@ -1155,6 +1221,7 @@ export function KeyboardGame({
             {filteredLevels.map((lvl) => {
               const realIdx = GAME_LEVELS.findIndex((g) => g.id === lvl.id);
               const isSelected = realIdx === currentLevelIndex;
+              const isUnlocked = unlockedLevels.has(lvl.id);
               const isCompleted = completedLevels.has(lvl.id);
               const stats = levelStats[lvl.id];
               const levelProgressPercent = isCompleted ? 100 : 0;
@@ -1165,10 +1232,14 @@ export function KeyboardGame({
               return (
                 <motion.div
                   key={lvl.id}
-                  whileHover={{ x: 3, transition: { duration: 0.15 } }}
+                  whileHover={{ x: isUnlocked ? 3 : 0, transition: { duration: 0.15 } }}
                   onClick={() => setCurrentLevelIndex(realIdx)}
                   className={`relative flex flex-col p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer text-left ${
-                    isSelected
+                    !isUnlocked
+                      ? isDark
+                        ? "bg-slate-950/50 border-slate-800/60 opacity-60 hover:opacity-85 text-slate-500"
+                        : "bg-slate-100/60 border-slate-200/80 opacity-65 hover:opacity-90 text-slate-500"
+                      : isSelected
                       ? isLeftOnly
                         ? isDark
                           ? "bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-900 border-emerald-500 ring-2 ring-emerald-500/40 shadow-[0_4px_24px_rgba(16,185,129,0.25)]"
@@ -1188,8 +1259,12 @@ export function KeyboardGame({
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded-md ${
-                          isSelected
+                        className={`text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                          !isUnlocked
+                            ? isDark
+                              ? "bg-slate-800 text-slate-400 border border-slate-700"
+                              : "bg-slate-200 text-slate-600"
+                            : isSelected
                             ? isLeftOnly
                               ? "bg-emerald-500 text-white shadow-xs"
                               : isRightOnly
@@ -1208,41 +1283,53 @@ export function KeyboardGame({
                             : "bg-orange-100 text-orange-600"
                         }`}
                       >
+                        {!isUnlocked && <Lock className="w-2.5 h-2.5" />}
                         LEVEL {lvl.id}
                       </span>
 
-                      {isLeftOnly && (
+                      {!isUnlocked ? (
+                        <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-400 border border-slate-500/20 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" /> Locked
+                        </span>
+                      ) : isLeftOnly ? (
                         <span className="text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                           Left Only
                         </span>
-                      )}
-                      {isRightOnly && (
+                      ) : isRightOnly ? (
                         <span className="text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
                           Right Only
                         </span>
-                      )}
+                      ) : null}
 
                       <span className="text-[11px] font-bold text-slate-400">
                         {lvl.steps.length} Keys
                       </span>
                     </div>
 
-                    {/* Mini Donut Pie Chart on Level Card */}
+                    {/* Mini Donut Pie Chart or Lock Icon on Level Card */}
                     <div className="flex items-center gap-2">
-                      <DonutProgressChart
-                        percent={levelProgressPercent}
-                        size={36}
-                        strokeWidth={4.5}
-                        isDark={isDark}
-                        label={isCompleted ? "✓" : `${levelProgressPercent}%`}
-                        showCenterText={true}
-                      />
+                      {!isUnlocked ? (
+                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${isDark ? "bg-slate-900 border-slate-800 text-slate-500" : "bg-slate-100 border-slate-200 text-slate-400"}`}>
+                          <Lock className="w-3.5 h-3.5" />
+                        </div>
+                      ) : (
+                        <DonutProgressChart
+                          percent={levelProgressPercent}
+                          size={36}
+                          strokeWidth={4.5}
+                          isDark={isDark}
+                          label={isCompleted ? "✓" : `${levelProgressPercent}%`}
+                          showCenterText={true}
+                        />
+                      )}
                     </div>
                   </div>
 
                   <h3
                     className={`text-base font-black tracking-tight ${
-                      isSelected
+                      !isUnlocked
+                        ? "text-slate-400 opacity-85"
+                        : isSelected
                         ? isLeftOnly
                           ? "text-emerald-400"
                           : isRightOnly
@@ -1262,7 +1349,7 @@ export function KeyboardGame({
                   </p>
 
                   {/* Level Quick Stats pill if completed */}
-                  {stats && (
+                  {stats && isUnlocked && (
                     <div className="mt-3 pt-2.5 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-between text-[11px] font-mono font-bold">
                       <span className="text-emerald-400">Acc: {stats.accuracy}%</span>
                       <span className="text-orange-400">Streak: {stats.maxStreak}x 🔥</span>
@@ -1277,11 +1364,13 @@ export function KeyboardGame({
           <div className="lg:col-span-7 flex flex-col gap-5 sticky top-20">
             {(() => {
               const selectedLvl = GAME_LEVELS[currentLevelIndex] || GAME_LEVELS[0];
+              const isSelectedUnlocked = unlockedLevels.has(selectedLvl.id);
               const isSelectedCompleted = completedLevels.has(selectedLvl.id);
               const selectedStats = levelStats[selectedLvl.id];
               const progressPercent = isSelectedCompleted ? 100 : 0;
               const isLeft = selectedLvl.category === "left_hand";
               const isRight = selectedLvl.category === "right_hand";
+              const prevRequiredLvl = currentLevelIndex > 0 ? GAME_LEVELS[currentLevelIndex - 1] : null;
 
               // Group unique keys for preview
               const uniqueKeys = Array.from(
@@ -1302,18 +1391,22 @@ export function KeyboardGame({
                       <div className="flex items-center gap-2 mb-1.5">
                         <span
                           className={`px-3 py-1 rounded-xl text-xs font-black tracking-wider uppercase text-white shadow-xs ${
-                            isLeft
+                            !isSelectedUnlocked
+                              ? "bg-slate-600"
+                              : isLeft
                               ? "bg-emerald-600"
                               : isRight
                               ? "bg-purple-600"
                               : "bg-orange-500"
                           }`}
                         >
-                          MISSION BRIEFING • LEVEL {selectedLvl.id}
+                          {!isSelectedUnlocked ? "🔒 LOCKED MISSION" : `MISSION BRIEFING • LEVEL ${selectedLvl.id}`}
                         </span>
                         <span
                           className={`text-xs font-bold ${
-                            isLeft
+                            !isSelectedUnlocked
+                              ? "text-slate-400"
+                              : isLeft
                               ? "text-emerald-400"
                               : isRight
                               ? "text-purple-400"
@@ -1331,8 +1424,9 @@ export function KeyboardGame({
                             : `${selectedLvl.fingerFocus} Mastery`}
                         </span>
                       </div>
-                      <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-                        {selectedLvl.title}
+                      <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+                        {!isSelectedUnlocked && <Lock className="w-6 h-6 text-amber-500" />}
+                        <span>{selectedLvl.title}</span>
                       </h2>
                       <p className="text-xs text-slate-400 font-semibold mt-0.5">
                         {selectedLvl.subtitle}
@@ -1363,7 +1457,7 @@ export function KeyboardGame({
                         strokeWidth={11}
                         isDark={isDark}
                         label={`${progressPercent}%`}
-                        sublabel={isSelectedCompleted ? "MASTERED" : "PROGRESS"}
+                        sublabel={!isSelectedUnlocked ? "LOCKED" : isSelectedCompleted ? "MASTERED" : "PROGRESS"}
                         showCenterText={true}
                       />
                     </div>
@@ -1380,15 +1474,23 @@ export function KeyboardGame({
                         </span>
                         <span
                           className={`text-sm font-black font-mono flex items-center gap-1.5 ${
-                            isSelectedCompleted ? "text-emerald-400" : "text-amber-500"
+                            !isSelectedUnlocked
+                              ? "text-slate-400"
+                              : isSelectedCompleted
+                              ? "text-emerald-400"
+                              : "text-amber-500"
                           }`}
                         >
                           <span
                             className={`w-2 h-2 rounded-full ${
-                              isSelectedCompleted ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-amber-400"
+                              !isSelectedUnlocked
+                                ? "bg-slate-500"
+                                : isSelectedCompleted
+                                ? "bg-emerald-400 shadow-[0_0_8px_#10b981]"
+                                : "bg-amber-400"
                             }`}
                           />
-                          {isSelectedCompleted ? "Completed" : "Ready to Start"}
+                          {!isSelectedUnlocked ? "Locked" : isSelectedCompleted ? "Completed" : "Ready to Start"}
                         </span>
                       </div>
 
@@ -1496,22 +1598,50 @@ export function KeyboardGame({
                     </div>
                   </div>
 
-                  {/* Big Bold Launch Button */}
+                  {/* Big Bold Launch or Unlock Requirement Button */}
                   <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 mt-2">
-                    <button
-                      onClick={() => startLevel(currentLevelIndex)}
-                      className={`w-full py-4 px-6 rounded-2xl text-white font-black text-sm tracking-wide flex items-center justify-center gap-3 shadow-xl hover:scale-101 active:scale-98 transition-all cursor-pointer ring-2 group ${
-                        isLeft
-                          ? "bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-emerald-500/25 hover:shadow-emerald-500/40 ring-emerald-400/40"
-                          : isRight
-                          ? "bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 shadow-purple-500/25 hover:shadow-purple-500/40 ring-purple-400/40"
-                          : "bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 shadow-orange-500/25 hover:shadow-orange-500/40 ring-orange-400/40"
-                      }`}
-                    >
-                      <Zap className="w-5 h-5 fill-white group-hover:rotate-12 transition-transform" />
-                      <span>START LEVEL {selectedLvl.id} TRAINING</span>
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    {!isSelectedUnlocked ? (
+                      <div className="flex flex-col gap-3">
+                        <div
+                          className={`p-4 rounded-2xl border flex items-center gap-3 ${
+                            isDark
+                              ? "bg-amber-500/10 border-amber-500/20 text-amber-300"
+                              : "bg-amber-50 border-amber-200 text-amber-800"
+                          }`}
+                        >
+                          <Lock className="w-5 h-5 shrink-0 text-amber-500" />
+                          <div className="text-xs">
+                            <span className="font-bold">Level Locked!</span> Complete{" "}
+                            <strong>Level {prevRequiredLvl?.id} ({prevRequiredLvl?.title})</strong> to unlock this training mission.
+                          </div>
+                        </div>
+
+                        {prevRequiredLvl && (
+                          <button
+                            onClick={() => startLevel(currentLevelIndex - 1)}
+                            className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 hover:scale-101 active:scale-98 transition-all cursor-pointer"
+                          >
+                            <span>Play Level {prevRequiredLvl.id} ({prevRequiredLvl.title})</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => startLevel(currentLevelIndex)}
+                        className={`w-full py-4 px-6 rounded-2xl text-white font-black text-sm tracking-wide flex items-center justify-center gap-3 shadow-xl hover:scale-101 active:scale-98 transition-all cursor-pointer ring-2 group ${
+                          isLeft
+                            ? "bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-emerald-500/25 hover:shadow-emerald-500/40 ring-emerald-400/40"
+                            : isRight
+                            ? "bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 shadow-purple-500/25 hover:shadow-purple-500/40 ring-purple-400/40"
+                            : "bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 shadow-orange-500/25 hover:shadow-orange-500/40 ring-orange-400/40"
+                        }`}
+                      >
+                        <Zap className="w-5 h-5 fill-white group-hover:rotate-12 transition-transform" />
+                        <span>START LEVEL {selectedLvl.id} TRAINING</span>
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
