@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { bgMusic, PLAYLIST } from "@/lib/bgMusic";
+import { bgMusic } from "@/lib/bgMusic";
 import { Music, Play, Pause, Volume2, VolumeX, SkipForward, SkipBack } from "lucide-react";
 
 interface MusicPlayerProps {
@@ -14,7 +14,6 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
   const [isMuted, setIsMuted] = useState<boolean>(bgMusic.getIsMuted());
   const [volume, setVolume] = useState<number>(bgMusic.getVolume());
   const [currentTrack, setCurrentTrack] = useState(bgMusic.getCurrentTrack());
-  const [trackIndex, setTrackIndex] = useState<number>(bgMusic.getCurrentTrackIndex());
   const [showVolumeSlider, setShowVolumeSlider] = useState<boolean>(false);
 
   useEffect(() => {
@@ -23,7 +22,6 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
       setIsMuted(bgMusic.getIsMuted());
       setVolume(bgMusic.getVolume());
       setCurrentTrack(bgMusic.getCurrentTrack());
-      setTrackIndex(bgMusic.getCurrentTrackIndex());
     });
     return () => unsubscribe();
   }, []);
@@ -130,13 +128,10 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
         <div
           onClick={handleTogglePlay}
           className="flex items-center gap-1.5 cursor-pointer select-none"
-          title={`${currentTrack.title} (${trackIndex + 1}/${PLAYLIST.length})`}
+          title={currentTrack.title}
         >
-          <span className="text-[11px] font-bold tracking-tight truncate max-w-[120px] sm:max-w-[150px]">
+          <span className="text-[11px] font-bold tracking-tight truncate max-w-[130px] sm:max-w-[160px]">
             {currentTrack.title}
-          </span>
-          <span className="text-[9px] font-mono opacity-75 px-1 py-0.2 rounded bg-orange-500/10 text-orange-500 hidden sm:inline font-bold">
-            {trackIndex + 1}/{PLAYLIST.length}
           </span>
         </div>
 
