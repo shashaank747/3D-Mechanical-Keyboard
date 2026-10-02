@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Keyboard from "@/components/ui/keyboard";
 import { ThemeSidebar } from "@/components/ui/ThemeSidebar";
@@ -18,7 +18,7 @@ import {
   Keyboard as KeyboardIcon, Sparkles, 
   Check, RotateCcw, Flame, Palette,
   Play, ArrowLeft, ArrowDown, BookOpen, Layers, Menu,
-  Volume2, Gamepad2, ShieldCheck, LogIn, User, X
+  Volume2, Gamepad2, ShieldCheck, LogIn, User, X, AlertTriangle, UserPlus
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { MusicPlayer } from "@/components/ui/MusicPlayer";
@@ -31,14 +31,49 @@ export default function KeyboardLandingPage() {
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
   const [currentTheme, setCurrentTheme] = useState<KeyboardTheme>(KEYBOARD_THEMES[0]);
   const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState(false);
+  
+  // Authentication & Arcade Access Gating
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [loggedInUser, setLoggedInUser] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("setu_active_user") || null;
+    }
+    return null;
+  });
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [signupName, setSignupName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [loginWarningMessage, setLoginWarningMessage] = useState<string | null>(null);
+
   const [colorZones, setColorZones] = useState<boolean>(true);
   const [testedKeys, setTestedKeys] = useState<Set<string>>(new Set());
   const [lastTriggeredKey, setLastTriggeredKey] = useState<{ key: string; code: string; time: number } | null>(null);
   const [totalKeyHits, setTotalKeyHits] = useState<number>(0);
+
+  // Gated Navigation: Strictly requires login before accessing "Let's Play" or Games
+  const handleLaunchArcade = useCallback((targetPage: AppPage = "start") => {
+    if (!loggedInUser) {
+      setLoginWarningMessage("⚠️ Please login or create an account first to enter the Arcade & Games Hub!");
+      setAuthMode("signin");
+      setIsLoginModalOpen(true);
+      return;
+    }
+    setCurrentPage(targetPage);
+  }, [loggedInUser]);
+
+  // Lock scroll when login modal is open
+  useEffect(() => {
+    if (isLoginModalOpen) {
+      const origOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = origOverflow;
+      };
+    }
+  }, [isLoginModalOpen]);
 
   // Speed test state
   const testPhrases = [
@@ -403,7 +438,7 @@ export default function KeyboardLandingPage() {
               className="mt-8 flex flex-wrap items-center justify-center gap-3"
             >
               <button
-                onClick={() => setCurrentPage("start")}
+                onClick={() => handleLaunchArcade("start")}
                 className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold text-sm shadow-xl hover:from-orange-500 hover:to-amber-500 hover:scale-105 active:scale-95 transition-all cursor-pointer group ring-2 ring-orange-400/40"
               >
                 <Sparkles className="w-4 h-4 text-white fill-white group-hover:rotate-12 transition-transform" />
@@ -424,7 +459,7 @@ export default function KeyboardLandingPage() {
               </button>
 
               <button
-                onClick={() => setCurrentPage("speedtest")}
+                onClick={() => handleLaunchArcade("speedtest")}
                 className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl border font-bold text-sm shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
                   isDark
                     ? "bg-slate-900/90 border-slate-700 text-white hover:bg-slate-800"
@@ -822,63 +857,132 @@ export default function KeyboardLandingPage() {
         currentTheme={currentTheme}
         onSelectTheme={(theme) => setCurrentTheme(theme)}
         currentPage={currentPage}
-        onNavigate={(page) => setCurrentPage(page)}
+        onNavigate={(page) => {
+          if (page === "home") {
+            setCurrentPage("home");
+          } else {
+            handleLaunchArcade(page);
+          }
+        }}
         colorZones={colorZones}
         onToggleColorZones={() => setColorZones((prev) => !prev)}
       />
 
-      {/* Interactive Login Modal */}
+      {/* ============================================================ */}
+      {/* TOP-CENTER WING AUTHENTICATION MODAL WITH LIVE 3D KEYBOARD   */}
+      {/* ============================================================ */}
       <AnimatePresence>
         {isLoginModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-between p-3 sm:p-5 bg-slate-950/40 backdrop-blur-xl overflow-hidden">
+            {/* Top Center Wing Card */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className={`w-full max-w-md p-6 sm:p-8 rounded-3xl border shadow-2xl relative ${
-                isDark ? "bg-slate-900/95 border-slate-800 text-white" : "bg-white/95 border-slate-200 text-slate-900"
+              initial={{ opacity: 0, y: -40, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -30, scale: 0.95 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              className={`w-full max-w-md p-5 sm:p-6 rounded-3xl border-2 shadow-[0_20px_60px_rgba(234,88,12,0.2)] relative z-20 backdrop-blur-2xl ${
+                isDark
+                  ? "bg-slate-900/95 border-orange-500/40 text-white"
+                  : "bg-white/95 border-orange-500/40 text-slate-900"
               }`}
             >
               {/* Close Button */}
               <button
-                onClick={() => setIsLoginModalOpen(false)}
-                className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all cursor-pointer"
+                onClick={() => {
+                  setIsLoginModalOpen(false);
+                  setLoginWarningMessage(null);
+                }}
+                className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all cursor-pointer"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-orange-500/20 text-orange-500 border border-orange-500/30">
-                    <LogIn className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black tracking-tight">Student / Dev Login</h3>
-                    <p className="text-xs text-slate-400">Sign in to save your typing records & streaks</p>
-                  </div>
+              {/* Header Title */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2.5 rounded-2xl bg-orange-500/20 text-orange-500 border border-orange-500/30 shadow-xs">
+                  {authMode === "signin" ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
                 </div>
+                <div>
+                  <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
+                    <span>{authMode === "signin" ? "Student / Dev Sign In" : "Create New Account"}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500 text-white font-mono uppercase">
+                      SETU
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {authMode === "signin" ? "Login to unlock Let's Play & save your typing streaks" : "Join to save high-scores & custom switch layouts"}
+                  </p>
+                </div>
+              </div>
 
+              {/* Warning Alert if triggered without login */}
+              {loginWarningMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-3 p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500 text-xs font-bold flex items-center gap-2 shadow-xs"
+                >
+                  <AlertTriangle className="w-4 h-4 shrink-0 animate-bounce" />
+                  <span>{loginWarningMessage}</span>
+                </motion.div>
+              )}
+
+              {/* Auth Mode Tabs */}
+              <div className="flex rounded-xl p-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode("signin")}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    authMode === "signin"
+                      ? "bg-orange-500 text-white shadow-xs"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthMode("signup")}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    authMode === "signup"
+                      ? "bg-orange-500 text-white shadow-xs"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
+
+              {/* Form Body */}
+              {authMode === "signin" ? (
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (loginEmail.trim()) {
-                      setLoggedInUser(loginEmail.split("@")[0]);
+                      const user = loginEmail.split("@")[0];
+                      setLoggedInUser(user);
+                      if (typeof window !== "undefined") {
+                        localStorage.setItem("setu_active_user", user);
+                      }
                       setIsLoginModalOpen(false);
+                      setLoginWarningMessage(null);
                       setLoginEmail("");
                       setLoginPassword("");
+                      confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
                     }
                   }}
-                  className="flex flex-col gap-3.5"
+                  className="flex flex-col gap-2.5"
                 >
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-400">Username or Email</label>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold text-slate-400">Username or Email</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. shashaank or student@setu.io"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${
+                      className={`w-full px-3.5 py-2 rounded-xl border text-xs font-medium outline-none transition-all ${
                         isDark
                           ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                           : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
@@ -886,14 +990,15 @@ export default function KeyboardLandingPage() {
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-400">Password</label>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold text-slate-400">Password</label>
                     <input
                       type="password"
+                      required
                       placeholder="••••••••"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${
+                      className={`w-full px-3.5 py-2 rounded-xl border text-xs font-medium outline-none transition-all ${
                         isDark
                           ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                           : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
@@ -903,27 +1008,124 @@ export default function KeyboardLandingPage() {
 
                   <button
                     type="submit"
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs tracking-wider uppercase shadow-lg shadow-orange-500/25 transition-all cursor-pointer mt-2"
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs tracking-wider uppercase shadow-lg shadow-orange-500/25 transition-all cursor-pointer mt-1"
                   >
-                    Sign In to 3D Keyboard
+                    Sign In & Unlock Let's Play
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoggedInUser("Guest Typist");
-                      setIsLoginModalOpen(false);
-                    }}
-                    className={`w-full py-2.5 px-4 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                      isDark
-                        ? "bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-800"
-                        : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
-                    }`}
-                  >
-                    Continue as Guest
-                  </button>
+                  <div className="text-center mt-1">
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode("signup")}
+                      className="text-[11px] text-orange-500 hover:underline font-semibold cursor-pointer"
+                    >
+                      New user? Create an account
+                    </button>
+                  </div>
                 </form>
-              </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (signupName.trim() || signupEmail.trim()) {
+                      const user = signupName.trim() || signupEmail.split("@")[0];
+                      setLoggedInUser(user);
+                      if (typeof window !== "undefined") {
+                        localStorage.setItem("setu_active_user", user);
+                      }
+                      setIsLoginModalOpen(false);
+                      setLoginWarningMessage(null);
+                      setSignupName("");
+                      setSignupEmail("");
+                      setSignupPassword("");
+                      confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
+                    }
+                  }}
+                  className="flex flex-col gap-2.5"
+                >
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold text-slate-400">Your Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Shashaank Sajjanar"
+                      value={signupName}
+                      onChange={(e) => setSignupName(e.target.value)}
+                      className={`w-full px-3.5 py-2 rounded-xl border text-xs font-medium outline-none transition-all ${
+                        isDark
+                          ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                          : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                      }`}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold text-slate-400">Choose Username / Email</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. shashaank747"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      className={`w-full px-3.5 py-2 rounded-xl border text-xs font-medium outline-none transition-all ${
+                        isDark
+                          ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                          : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                      }`}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold text-slate-400">Create Password</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      className={`w-full px-3.5 py-2 rounded-xl border text-xs font-medium outline-none transition-all ${
+                        isDark
+                          ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                          : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                      }`}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs tracking-wider uppercase shadow-lg shadow-orange-500/25 transition-all cursor-pointer mt-1"
+                  >
+                    Create Account & Unlock Let's Play
+                  </button>
+
+                  <div className="text-center mt-1">
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode("signin")}
+                      className="text-[11px] text-orange-500 hover:underline font-semibold cursor-pointer"
+                    >
+                      Already have an account? Sign In
+                    </button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+
+            {/* Prominent 3D Mechanical Keyboard Displayed Live on Screen while Logging in */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.4 }}
+              className="w-full flex flex-col items-center justify-center p-0 sm:p-2 pointer-events-auto"
+            >
+              <Keyboard
+                className="mx-auto scale-90 sm:scale-100"
+                theme={currentTheme}
+                colorZones={colorZones}
+                onKeyPress={handleKeyTriggered}
+                onOpenThemeSidebar={() => setIsThemeSidebarOpen(true)}
+              />
             </motion.div>
           </div>
         )}
