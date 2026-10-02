@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import type { KeyboardTheme } from "@/lib/themes";
 
 interface MotionBackgroundProps {
@@ -69,9 +69,9 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
   const isDark = theme.isDark || theme.category === "Dark";
 
   // Derive vibrant dynamic palette from active theme preview colors
-  const primaryColor = theme.previewColors[3] || "#f97316"; // Accent
-  const secondaryColor = theme.previewColors[2] || "#06b6d4"; // Mod
-  const tertiaryColor = theme.previewColors[1] || "#8b5cf6"; // Base
+  const primaryColor = theme.previewColors[3] || "#ea580c"; // Accent
+  const secondaryColor = theme.previewColors[2] || "#0891b2"; // Mod
+  const tertiaryColor = theme.previewColors[1] || "#7c3aed"; // Base
 
   const primaryRgb = hexToRgb(primaryColor);
   const secondaryRgb = hexToRgb(secondaryColor);
@@ -107,16 +107,17 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
 
     const handlePointerDown = (e: MouseEvent) => {
       // Spawn ripple shockwave on click
+      const shockAlpha = isDark ? 0.9 : 0.85;
       const colors = [
-        `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.8)`,
-        `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, 0.8)`,
+        `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${shockAlpha})`,
+        `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${shockAlpha})`,
       ];
       shockwavesRef.current.push({
         x: e.clientX,
         y: e.clientY,
         radius: 10,
         maxRadius: Math.min(width, height) * 0.45,
-        alpha: 0.9,
+        alpha: shockAlpha,
         color: colors[Math.floor(Math.random() * colors.length)],
       });
       if (shockwavesRef.current.length > 8) shockwavesRef.current.shift();
@@ -124,9 +125,10 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
 
     const handleKeyDown = () => {
       // Spawn subtle ripple near center / bottom when typing
+      const shockAlpha = isDark ? 0.75 : 0.7;
       const colors = [
-        `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.6)`,
-        `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, 0.6)`,
+        `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${shockAlpha})`,
+        `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${shockAlpha})`,
       ];
       const rx = width * 0.5 + (Math.random() - 0.5) * (width * 0.4);
       const ry = height * 0.6 + (Math.random() - 0.5) * (height * 0.2);
@@ -135,7 +137,7 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         y: ry,
         radius: 5,
         maxRadius: 180 + Math.random() * 120,
-        alpha: 0.7,
+        alpha: shockAlpha,
         color: colors[Math.floor(Math.random() * colors.length)],
       });
       if (shockwavesRef.current.length > 8) shockwavesRef.current.shift();
@@ -147,25 +149,35 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
     window.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("keydown", handleKeyDown);
 
-    // Initialize Particles for interactive constellation
-    const particleCount = isDark ? 65 : 45;
+    // Initialize Particles for interactive constellation (High contrast in light mode)
+    const particleCount = isDark ? 65 : 60;
     const particles: Particle[] = [];
-    const colorPalette = [
-      `rgb(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b})`,
-      `rgb(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b})`,
-      `rgb(${tertiaryRgb.r}, ${tertiaryRgb.g}, ${tertiaryRgb.b})`,
-    ];
+    const colorPalette = isDark
+      ? [
+          `rgb(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b})`,
+          `rgb(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b})`,
+          `rgb(${tertiaryRgb.r}, ${tertiaryRgb.g}, ${tertiaryRgb.b})`,
+        ]
+      : [
+          // Saturated high-contrast tones for white backgrounds
+          `rgb(${Math.max(0, primaryRgb.r - 20)}, ${Math.max(0, primaryRgb.g - 20)}, ${Math.max(0, primaryRgb.b - 20)})`,
+          `rgb(${Math.max(0, secondaryRgb.r - 20)}, ${Math.max(0, secondaryRgb.g - 20)}, ${Math.max(0, secondaryRgb.b - 20)})`,
+          `rgb(${Math.max(0, tertiaryRgb.r - 20)}, ${Math.max(0, tertiaryRgb.g - 20)}, ${Math.max(0, tertiaryRgb.b - 20)})`,
+          `rgba(234, 88, 12, 0.9)`, // Radiant Amber-Orange
+          `rgba(8, 145, 178, 0.9)`, // Deep Cyan
+          `rgba(124, 58, 237, 0.9)`, // Vivid Violet
+        ];
 
     for (let i = 0; i < particleCount; i++) {
       const col = colorPalette[i % colorPalette.length];
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6,
-        size: Math.random() * 2.8 + 1.2,
-        baseAlpha: isDark ? Math.random() * 0.6 + 0.3 : Math.random() * 0.4 + 0.2,
-        alpha: 0.5,
+        vx: (Math.random() - 0.5) * 0.65,
+        vy: (Math.random() - 0.5) * 0.65,
+        size: isDark ? Math.random() * 2.8 + 1.4 : Math.random() * 3.5 + 2.0,
+        baseAlpha: isDark ? Math.random() * 0.5 + 0.4 : Math.random() * 0.35 + 0.55,
+        alpha: 0.7,
         color: col,
         pulseSpeed: 0.02 + Math.random() * 0.03,
         pulseOffset: Math.random() * Math.PI * 2,
@@ -173,20 +185,20 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
     }
 
     // Floating Tech Glyphs (switch cross stems, brackets, mechanical runes)
-    const techSymbols = ["+", "◇", "⬡", "::", "//", "⊞", "×"];
+    const techSymbols = ["+", "◇", "⬡", "::", "//", "⊞", "×", "•"];
     const techItems: FloatingTechItem[] = [];
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 16; i++) {
       techItems.push({
         id: i,
         x: Math.random() * width,
         y: Math.random() * height,
         symbol: techSymbols[i % techSymbols.length],
-        size: 14 + Math.random() * 16,
+        size: isDark ? 14 + Math.random() * 16 : 16 + Math.random() * 18,
         rotation: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.015,
         vx: (Math.random() - 0.5) * 0.35,
         vy: -0.2 - Math.random() * 0.3,
-        opacity: isDark ? 0.12 + Math.random() * 0.15 : 0.08 + Math.random() * 0.1,
+        opacity: isDark ? 0.15 + Math.random() * 0.18 : 0.22 + Math.random() * 0.2,
       });
     }
 
@@ -211,9 +223,11 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         ctx.beginPath();
         ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
         ctx.strokeStyle = sw.color.replace(/[\d.]+\)$/, `${sw.alpha})`);
-        ctx.lineWidth = 2.5 * (sw.alpha + 0.2);
-        ctx.shadowColor = sw.color;
-        ctx.shadowBlur = isDark ? 15 : 8;
+        ctx.lineWidth = isDark ? 2.5 * (sw.alpha + 0.2) : 3.5 * (sw.alpha + 0.3);
+        if (isDark) {
+          ctx.shadowColor = sw.color;
+          ctx.shadowBlur = 15;
+        }
         ctx.stroke();
         ctx.restore();
       }
@@ -223,9 +237,9 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
       const gridSegments = 16;
       ctx.save();
       ctx.strokeStyle = isDark
-        ? `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.06)`
-        : `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.04)`;
-      ctx.lineWidth = 1;
+        ? `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.08)`
+        : `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.16)`;
+      ctx.lineWidth = isDark ? 1 : 1.25;
 
       // Vertical perspective fan lines
       for (let i = 0; i <= gridSegments; i++) {
@@ -243,8 +257,8 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         if (animatedY <= height) {
           const depthProgress = Math.max(0, (animatedY - (horizonY - 100)) / (height - (horizonY - 100)));
           ctx.strokeStyle = isDark
-            ? `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${depthProgress * 0.12})`
-            : `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${depthProgress * 0.08})`;
+            ? `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${depthProgress * 0.14})`
+            : `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${depthProgress * 0.22})`;
           ctx.beginPath();
           ctx.moveTo(0, animatedY);
           ctx.lineTo(width, animatedY);
@@ -277,15 +291,15 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         ctx.rotate(item.rotation);
         ctx.fillStyle = isDark
           ? `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${item.opacity})`
-          : `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${item.opacity * 0.8})`;
+          : `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${item.opacity})`;
         ctx.font = `${item.size}px 'JetBrains Mono', monospace`;
         ctx.fillText(item.symbol, 0, 0);
         ctx.restore();
       }
       ctx.restore();
 
-      // 4. Update & Connect Constellation Particles
-      const maxConnectDist = isDark ? 130 : 110;
+      // 4. Update & Connect Constellation Particles (Clear & Vibrant on Light/White theme)
+      const maxConnectDist = isDark ? 130 : 125;
       const mouse = mouseRef.current;
 
       for (let i = 0; i < particles.length; i++) {
@@ -322,11 +336,11 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < maxConnectDist) {
-            const lineAlpha = (1 - dist / maxConnectDist) * (isDark ? 0.22 : 0.14);
+            const lineAlpha = (1 - dist / maxConnectDist) * (isDark ? 0.28 : 0.42);
             ctx.strokeStyle = isDark
               ? `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${lineAlpha})`
-              : `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${lineAlpha})`;
-            ctx.lineWidth = 1;
+              : `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${lineAlpha})`;
+            ctx.lineWidth = isDark ? 1 : 1.5;
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
@@ -339,10 +353,13 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
-        ctx.globalAlpha = Math.max(0.1, Math.min(1, p.alpha));
+        ctx.globalAlpha = Math.max(0.25, Math.min(1, p.alpha));
         if (isDark) {
           ctx.shadowColor = p.color;
           ctx.shadowBlur = 8;
+        } else {
+          ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
+          ctx.shadowBlur = 4;
         }
         ctx.fill();
         ctx.restore();
@@ -361,7 +378,7 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
       window.removeEventListener("keydown", handleKeyDown);
       cancelAnimationFrame(animId);
     };
-  }, [theme, isDark, primaryColor, secondaryColor, tertiaryColor]);
+  }, [theme, isDark, primaryColor, secondaryColor, tertiaryColor, primaryRgb, secondaryRgb, tertiaryRgb]);
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
@@ -370,59 +387,61 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         className={`absolute inset-0 transition-opacity duration-700 ${
           isDark
             ? "bg-[radial-gradient(ellipse_at_center,_transparent_40%,_rgba(2,6,23,0.85)_100%)]"
-            : "bg-[radial-gradient(ellipse_at_center,_transparent_50%,_rgba(241,245,249,0.7)_100%)]"
+            : "bg-[radial-gradient(ellipse_at_center,_transparent_35%,_rgba(241,245,249,0.75)_100%)]"
         }`}
       />
 
       {/* 2. Primary Morphing Aurora Plasma Mesh Blob 1 (Top Left / Orange-Cyan) */}
       <div
-        className={`absolute -top-32 -left-32 w-[680px] h-[680px] rounded-full filter blur-[120px] animate-aurora-blob-1 transition-all duration-1000 ${
-          isDark ? "opacity-60 mix-blend-screen" : "opacity-45 mix-blend-multiply"
+        className={`absolute -top-32 -left-32 w-[720px] h-[720px] rounded-full filter blur-[100px] animate-aurora-blob-1 transition-all duration-1000 ${
+          isDark ? "opacity-60 mix-blend-screen" : "opacity-75 mix-blend-multiply"
         }`}
         style={{
           background: isDark
             ? `radial-gradient(circle, ${primaryColor}99 0%, ${secondaryColor}66 50%, transparent 75%)`
-            : `radial-gradient(circle, ${primaryColor}55 0%, ${secondaryColor}33 50%, transparent 75%)`,
+            : `radial-gradient(circle, ${primaryColor}77 0%, ${secondaryColor}55 50%, transparent 80%)`,
         }}
       />
 
       {/* 3. Primary Morphing Aurora Plasma Mesh Blob 2 (Top Right / Violet-Indigo) */}
       <div
-        className={`absolute top-1/4 -right-32 w-[720px] h-[720px] rounded-full filter blur-[130px] animate-aurora-blob-2 transition-all duration-1000 ${
-          isDark ? "opacity-55 mix-blend-screen" : "opacity-40 mix-blend-multiply"
+        className={`absolute top-1/4 -right-32 w-[750px] h-[750px] rounded-full filter blur-[110px] animate-aurora-blob-2 transition-all duration-1000 ${
+          isDark ? "opacity-55 mix-blend-screen" : "opacity-70 mix-blend-multiply"
         }`}
         style={{
           background: isDark
             ? `radial-gradient(circle, ${secondaryColor}88 0%, ${tertiaryColor}66 50%, transparent 75%)`
-            : `radial-gradient(circle, ${secondaryColor}44 0%, ${tertiaryColor}33 50%, transparent 75%)`,
+            : `radial-gradient(circle, ${secondaryColor}66 0%, ${tertiaryColor}55 50%, transparent 80%)`,
         }}
       />
 
       {/* 4. Primary Morphing Aurora Plasma Mesh Blob 3 (Bottom Left / Emerald-Rose) */}
       <div
-        className={`absolute -bottom-40 -left-20 w-[760px] h-[760px] rounded-full filter blur-[140px] animate-aurora-blob-3 transition-all duration-1000 ${
-          isDark ? "opacity-50 mix-blend-screen" : "opacity-35 mix-blend-multiply"
+        className={`absolute -bottom-40 -left-20 w-[800px] h-[800px] rounded-full filter blur-[120px] animate-aurora-blob-3 transition-all duration-1000 ${
+          isDark ? "opacity-50 mix-blend-screen" : "opacity-65 mix-blend-multiply"
         }`}
         style={{
           background: isDark
             ? `radial-gradient(circle, ${tertiaryColor}77 0%, ${primaryColor}55 50%, transparent 75%)`
-            : `radial-gradient(circle, ${tertiaryColor}44 0%, ${primaryColor}25 50%, transparent 75%)`,
+            : `radial-gradient(circle, ${tertiaryColor}66 0%, ${primaryColor}44 50%, transparent 80%)`,
         }}
       />
 
       {/* 5. Central Kinetic Ambient Breathing Core */}
       <div
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[550px] rounded-full filter blur-[150px] animate-ambient-pulse transition-all duration-1000 ${
-          isDark ? "opacity-40 mix-blend-screen" : "opacity-30 mix-blend-multiply"
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[950px] h-[600px] rounded-full filter blur-[130px] animate-ambient-pulse transition-all duration-1000 ${
+          isDark ? "opacity-40 mix-blend-screen" : "opacity-55 mix-blend-multiply"
         }`}
         style={{
-          background: `radial-gradient(ellipse at center, ${primaryColor}44 0%, ${secondaryColor}22 55%, transparent 75%)`,
+          background: isDark
+            ? `radial-gradient(ellipse at center, ${primaryColor}44 0%, ${secondaryColor}22 55%, transparent 75%)`
+            : `radial-gradient(ellipse at center, ${primaryColor}66 0%, ${secondaryColor}44 55%, transparent 80%)`,
         }}
       />
 
       {/* 6. Subtle Cyber Scanline / Dot Matrix Grid Texture */}
       <div
-        className={`absolute inset-0 opacity-[0.035] ${isDark ? "invert" : ""}`}
+        className={`absolute inset-0 ${isDark ? "opacity-[0.035] invert" : "opacity-[0.065]"}`}
         style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
           backgroundSize: "28px 28px",
