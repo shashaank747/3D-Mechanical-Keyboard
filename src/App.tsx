@@ -979,7 +979,7 @@ export default function KeyboardLandingPage() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. shashaank or student@setu.io"
+                      placeholder="example@gmail.com"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       className={`w-full px-3.5 py-2 rounded-xl border text-xs font-medium outline-none transition-all ${
@@ -1048,7 +1048,7 @@ export default function KeyboardLandingPage() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Shashaank Sajjanar"
+                      placeholder="e.g. Alex Smith"
                       value={signupName}
                       onChange={(e) => setSignupName(e.target.value)}
                       className={`w-full px-3.5 py-2 rounded-xl border text-xs font-medium outline-none transition-all ${
@@ -1064,7 +1064,7 @@ export default function KeyboardLandingPage() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. shashaank747"
+                      placeholder="example@gmail.com"
                       value={signupEmail}
                       onChange={(e) => setSignupEmail(e.target.value)}
                       className={`w-full px-3.5 py-2 rounded-xl border text-xs font-medium outline-none transition-all ${
