@@ -844,7 +844,7 @@ export default function KeyboardLandingPage() {
               <span className="font-semibold">3D Mechanical Keyboard Engine</span>
             </div>
             <div>
-              <span>Crafted with React, Framer Motion & Tailwind CSS</span>
+              <span>Made by Shashaank Sajjanar and Antigravity</span>
             </div>
           </div>
         </footer>
