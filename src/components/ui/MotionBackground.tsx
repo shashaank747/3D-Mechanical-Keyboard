@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, memo } from "react";
 import type { KeyboardTheme } from "@/lib/themes";
 
 interface MotionBackgroundProps {
@@ -57,7 +57,7 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-export function MotionBackground({ theme }: MotionBackgroundProps) {
+export const MotionBackground = memo(function MotionBackground({ theme }: MotionBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mouseRef = useRef<{ x: number; y: number; active: boolean }>({
     x: -1000,
@@ -65,6 +65,8 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
     active: false,
   });
   const shockwavesRef = useRef<Shockwave[]>([]);
+  const particlesRef = useRef<Particle[]>([]);
+  const techItemsRef = useRef<FloatingTechItem[]>([]);
 
   const isDark = theme.isDark || theme.category === "Dark";
 
@@ -73,10 +75,57 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
   const secondaryColor = theme.previewColors[2] || "#0891b2"; // Mod
   const tertiaryColor = theme.previewColors[1] || "#7c3aed"; // Base
 
-  const primaryRgb = hexToRgb(primaryColor);
-  const secondaryRgb = hexToRgb(secondaryColor);
-  const tertiaryRgb = hexToRgb(tertiaryColor);
+  // Keep a ref to the latest theme & colors so animation loop runs continuously without restarting on prop changes
+  const themeRef = useRef({
+    isDark,
+    primaryColor,
+    secondaryColor,
+    tertiaryColor,
+    primaryRgb: hexToRgb(primaryColor),
+    secondaryRgb: hexToRgb(secondaryColor),
+    tertiaryRgb: hexToRgb(tertiaryColor),
+  });
 
+  // Update theme ref on changes without resetting animation particles
+  useEffect(() => {
+    themeRef.current = {
+      isDark,
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+      primaryRgb: hexToRgb(primaryColor),
+      secondaryRgb: hexToRgb(secondaryColor),
+      tertiaryRgb: hexToRgb(tertiaryColor),
+    };
+
+    // Smoothly update colors of existing particles without resetting their positions
+    if (particlesRef.current.length > 0) {
+      const pRgb = themeRef.current.primaryRgb;
+      const sRgb = themeRef.current.secondaryRgb;
+      const tRgb = themeRef.current.tertiaryRgb;
+
+      const palette = isDark
+        ? [
+            `rgb(${pRgb.r}, ${pRgb.g}, ${pRgb.b})`,
+            `rgb(${sRgb.r}, ${sRgb.g}, ${sRgb.b})`,
+            `rgb(${tRgb.r}, ${tRgb.g}, ${tRgb.b})`,
+          ]
+        : [
+            `rgb(${Math.max(0, pRgb.r - 20)}, ${Math.max(0, pRgb.g - 20)}, ${Math.max(0, pRgb.b - 20)})`,
+            `rgb(${Math.max(0, sRgb.r - 20)}, ${Math.max(0, sRgb.g - 20)}, ${Math.max(0, sRgb.b - 20)})`,
+            `rgb(${Math.max(0, tRgb.r - 20)}, ${Math.max(0, tRgb.g - 20)}, ${Math.max(0, tRgb.b - 20)})`,
+            `rgba(234, 88, 12, 0.9)`,
+            `rgba(8, 145, 178, 0.9)`,
+            `rgba(124, 58, 237, 0.9)`,
+          ];
+
+      particlesRef.current.forEach((p, i) => {
+        p.color = palette[i % palette.length];
+      });
+    }
+  }, [isDark, primaryColor, secondaryColor, tertiaryColor]);
+
+  // Continuous uninterrupted animation loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -107,10 +156,13 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
 
     const handlePointerDown = (e: MouseEvent) => {
       // Spawn ripple shockwave on click
-      const shockAlpha = isDark ? 0.9 : 0.85;
+      const currentDark = themeRef.current.isDark;
+      const pRgb = themeRef.current.primaryRgb;
+      const sRgb = themeRef.current.secondaryRgb;
+      const shockAlpha = currentDark ? 0.9 : 0.85;
       const colors = [
-        `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${shockAlpha})`,
-        `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${shockAlpha})`,
+        `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, ${shockAlpha})`,
+        `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, ${shockAlpha})`,
       ];
       shockwavesRef.current.push({
         x: e.clientX,
@@ -125,10 +177,13 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
 
     const handleKeyDown = () => {
       // Spawn subtle ripple near center / bottom when typing
-      const shockAlpha = isDark ? 0.75 : 0.7;
+      const currentDark = themeRef.current.isDark;
+      const pRgb = themeRef.current.primaryRgb;
+      const sRgb = themeRef.current.secondaryRgb;
+      const shockAlpha = currentDark ? 0.75 : 0.7;
       const colors = [
-        `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${shockAlpha})`,
-        `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${shockAlpha})`,
+        `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, ${shockAlpha})`,
+        `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, ${shockAlpha})`,
       ];
       const rx = width * 0.5 + (Math.random() - 0.5) * (width * 0.4);
       const ry = height * 0.6 + (Math.random() - 0.5) * (height * 0.2);
@@ -149,57 +204,62 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
     window.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("keydown", handleKeyDown);
 
-    // Initialize Particles for interactive constellation (High contrast in light mode)
-    const particleCount = isDark ? 65 : 60;
-    const particles: Particle[] = [];
-    const colorPalette = isDark
-      ? [
-          `rgb(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b})`,
-          `rgb(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b})`,
-          `rgb(${tertiaryRgb.r}, ${tertiaryRgb.g}, ${tertiaryRgb.b})`,
-        ]
-      : [
-          // Saturated high-contrast tones for white backgrounds
-          `rgb(${Math.max(0, primaryRgb.r - 20)}, ${Math.max(0, primaryRgb.g - 20)}, ${Math.max(0, primaryRgb.b - 20)})`,
-          `rgb(${Math.max(0, secondaryRgb.r - 20)}, ${Math.max(0, secondaryRgb.g - 20)}, ${Math.max(0, secondaryRgb.b - 20)})`,
-          `rgb(${Math.max(0, tertiaryRgb.r - 20)}, ${Math.max(0, tertiaryRgb.g - 20)}, ${Math.max(0, tertiaryRgb.b - 20)})`,
-          `rgba(234, 88, 12, 0.9)`, // Radiant Amber-Orange
-          `rgba(8, 145, 178, 0.9)`, // Deep Cyan
-          `rgba(124, 58, 237, 0.9)`, // Vivid Violet
-        ];
+    // Initialize particles ONLY once if not already initialized
+    if (particlesRef.current.length === 0) {
+      const particleCount = 65;
+      const pRgb = themeRef.current.primaryRgb;
+      const sRgb = themeRef.current.secondaryRgb;
+      const tRgb = themeRef.current.tertiaryRgb;
 
-    for (let i = 0; i < particleCount; i++) {
-      const col = colorPalette[i % colorPalette.length];
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.65,
-        vy: (Math.random() - 0.5) * 0.65,
-        size: isDark ? Math.random() * 2.8 + 1.4 : Math.random() * 3.5 + 2.0,
-        baseAlpha: isDark ? Math.random() * 0.5 + 0.4 : Math.random() * 0.35 + 0.55,
-        alpha: 0.7,
-        color: col,
-        pulseSpeed: 0.02 + Math.random() * 0.03,
-        pulseOffset: Math.random() * Math.PI * 2,
-      });
+      const colorPalette = themeRef.current.isDark
+        ? [
+            `rgb(${pRgb.r}, ${pRgb.g}, ${pRgb.b})`,
+            `rgb(${sRgb.r}, ${sRgb.g}, ${sRgb.b})`,
+            `rgb(${tRgb.r}, ${tRgb.g}, ${tRgb.b})`,
+          ]
+        : [
+            `rgb(${Math.max(0, pRgb.r - 20)}, ${Math.max(0, pRgb.g - 20)}, ${Math.max(0, pRgb.b - 20)})`,
+            `rgb(${Math.max(0, sRgb.r - 20)}, ${Math.max(0, sRgb.g - 20)}, ${Math.max(0, sRgb.b - 20)})`,
+            `rgb(${Math.max(0, tRgb.r - 20)}, ${Math.max(0, tRgb.g - 20)}, ${Math.max(0, tRgb.b - 20)})`,
+            `rgba(234, 88, 12, 0.9)`,
+            `rgba(8, 145, 178, 0.9)`,
+            `rgba(124, 58, 237, 0.9)`,
+          ];
+
+      for (let i = 0; i < particleCount; i++) {
+        const col = colorPalette[i % colorPalette.length];
+        particlesRef.current.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.65,
+          vy: (Math.random() - 0.5) * 0.65,
+          size: themeRef.current.isDark ? Math.random() * 2.8 + 1.4 : Math.random() * 3.5 + 2.0,
+          baseAlpha: themeRef.current.isDark ? Math.random() * 0.5 + 0.4 : Math.random() * 0.35 + 0.55,
+          alpha: 0.7,
+          color: col,
+          pulseSpeed: 0.02 + Math.random() * 0.03,
+          pulseOffset: Math.random() * Math.PI * 2,
+        });
+      }
     }
 
-    // Floating Tech Glyphs (switch cross stems, brackets, mechanical runes)
-    const techSymbols = ["+", "◇", "⬡", "::", "//", "⊞", "×", "•"];
-    const techItems: FloatingTechItem[] = [];
-    for (let i = 0; i < 16; i++) {
-      techItems.push({
-        id: i,
-        x: Math.random() * width,
-        y: Math.random() * height,
-        symbol: techSymbols[i % techSymbols.length],
-        size: isDark ? 14 + Math.random() * 16 : 16 + Math.random() * 18,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.015,
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: -0.2 - Math.random() * 0.3,
-        opacity: isDark ? 0.15 + Math.random() * 0.18 : 0.22 + Math.random() * 0.2,
-      });
+    // Initialize Floating Tech Glyphs ONLY once if not already initialized
+    if (techItemsRef.current.length === 0) {
+      const techSymbols = ["+", "◇", "⬡", "::", "//", "⊞", "×", "•"];
+      for (let i = 0; i < 16; i++) {
+        techItemsRef.current.push({
+          id: i,
+          x: Math.random() * width,
+          y: Math.random() * height,
+          symbol: techSymbols[i % techSymbols.length],
+          size: themeRef.current.isDark ? 14 + Math.random() * 16 : 16 + Math.random() * 18,
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.015,
+          vx: (Math.random() - 0.5) * 0.35,
+          vy: -0.2 - Math.random() * 0.3,
+          opacity: themeRef.current.isDark ? 0.15 + Math.random() * 0.18 : 0.22 + Math.random() * 0.2,
+        });
+      }
     }
 
     let time = 0;
@@ -207,6 +267,10 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
     const render = () => {
       time += 0.016;
       ctx.clearRect(0, 0, width, height);
+
+      const currentDark = themeRef.current.isDark;
+      const pRgb = themeRef.current.primaryRgb;
+      const sRgb = themeRef.current.secondaryRgb;
 
       // 1. Draw Shockwaves / Typist Ripples
       for (let i = shockwavesRef.current.length - 1; i >= 0; i--) {
@@ -223,8 +287,8 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         ctx.beginPath();
         ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
         ctx.strokeStyle = sw.color.replace(/[\d.]+\)$/, `${sw.alpha})`);
-        ctx.lineWidth = isDark ? 2.5 * (sw.alpha + 0.2) : 3.5 * (sw.alpha + 0.3);
-        if (isDark) {
+        ctx.lineWidth = currentDark ? 2.5 * (sw.alpha + 0.2) : 3.5 * (sw.alpha + 0.3);
+        if (currentDark) {
           ctx.shadowColor = sw.color;
           ctx.shadowBlur = 15;
         }
@@ -236,10 +300,10 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
       const horizonY = height * 0.82;
       const gridSegments = 16;
       ctx.save();
-      ctx.strokeStyle = isDark
-        ? `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.08)`
-        : `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.16)`;
-      ctx.lineWidth = isDark ? 1 : 1.25;
+      ctx.strokeStyle = currentDark
+        ? `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.08)`
+        : `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.16)`;
+      ctx.lineWidth = currentDark ? 1 : 1.25;
 
       // Vertical perspective fan lines
       for (let i = 0; i <= gridSegments; i++) {
@@ -250,15 +314,15 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         ctx.stroke();
       }
 
-      // Horizontal ground lines with moving offset
+      // Continuous horizontal ground lines with smooth perpetual scrolling
       const gridSpeed = (time * 25) % 30;
       for (let y = horizonY - 100; y <= height; y += 28) {
         const animatedY = y + gridSpeed;
         if (animatedY <= height) {
           const depthProgress = Math.max(0, (animatedY - (horizonY - 100)) / (height - (horizonY - 100)));
-          ctx.strokeStyle = isDark
-            ? `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${depthProgress * 0.14})`
-            : `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${depthProgress * 0.22})`;
+          ctx.strokeStyle = currentDark
+            ? `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, ${depthProgress * 0.14})`
+            : `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, ${depthProgress * 0.22})`;
           ctx.beginPath();
           ctx.moveTo(0, animatedY);
           ctx.lineTo(width, animatedY);
@@ -273,6 +337,7 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
+      const techItems = techItemsRef.current;
       for (let i = 0; i < techItems.length; i++) {
         const item = techItems[i];
         item.x += item.vx;
@@ -289,36 +354,48 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         ctx.save();
         ctx.translate(item.x, item.y);
         ctx.rotate(item.rotation);
-        ctx.fillStyle = isDark
-          ? `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${item.opacity})`
-          : `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${item.opacity})`;
+        ctx.fillStyle = `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, ${item.opacity})`;
         ctx.font = `${item.size}px 'JetBrains Mono', monospace`;
         ctx.fillText(item.symbol, 0, 0);
         ctx.restore();
       }
       ctx.restore();
 
-      // 4. Update & Connect Constellation Particles (Clear & Vibrant on Light/White theme)
-      const maxConnectDist = isDark ? 130 : 125;
+      // 4. Update & Connect Constellation Particles (Smoothly & Continuously without resets)
+      const maxConnectDist = currentDark ? 130 : 125;
       const mouse = mouseRef.current;
+      const particles = particlesRef.current;
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // Move
+        // Perpetual smooth motion
         p.x += p.vx;
         p.y += p.vy;
 
-        // Bounce screen edges
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
+        // Smooth continuous wrap / bounce at edges
+        if (p.x < 0) {
+          p.x = 0;
+          p.vx = Math.abs(p.vx);
+        } else if (p.x > width) {
+          p.x = width;
+          p.vx = -Math.abs(p.vx);
+        }
+
+        if (p.y < 0) {
+          p.y = 0;
+          p.vy = Math.abs(p.vy);
+        } else if (p.y > height) {
+          p.y = height;
+          p.vy = -Math.abs(p.vy);
+        }
 
         // Mouse interaction (repel gently and brighten)
         if (mouse.active) {
           const dx = mouse.x - p.x;
           const dy = mouse.y - p.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 160) {
+          if (dist < 160 && dist > 0.001) {
             const force = (160 - dist) / 160;
             p.x -= (dx / dist) * force * 3;
             p.y -= (dy / dist) * force * 3;
@@ -336,11 +413,9 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < maxConnectDist) {
-            const lineAlpha = (1 - dist / maxConnectDist) * (isDark ? 0.28 : 0.42);
-            ctx.strokeStyle = isDark
-              ? `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${lineAlpha})`
-              : `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${lineAlpha})`;
-            ctx.lineWidth = isDark ? 1 : 1.5;
+            const lineAlpha = (1 - dist / maxConnectDist) * (currentDark ? 0.28 : 0.42);
+            ctx.strokeStyle = `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, ${lineAlpha})`;
+            ctx.lineWidth = currentDark ? 1 : 1.5;
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
@@ -354,7 +429,7 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.globalAlpha = Math.max(0.25, Math.min(1, p.alpha));
-        if (isDark) {
+        if (currentDark) {
           ctx.shadowColor = p.color;
           ctx.shadowBlur = 8;
         } else {
@@ -378,7 +453,7 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
       window.removeEventListener("keydown", handleKeyDown);
       cancelAnimationFrame(animId);
     };
-  }, [theme, isDark, primaryColor, secondaryColor, tertiaryColor, primaryRgb, secondaryRgb, tertiaryRgb]);
+  }, []); // Run ONLY once on mount for seamless, uninterrupted continuous animation!
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
@@ -455,7 +530,7 @@ export function MotionBackground({ theme }: MotionBackgroundProps) {
       />
     </div>
   );
-}
+});
 
 // Backward compatibility alias
 export { MotionBackground as GlowingSmokeBackground };
