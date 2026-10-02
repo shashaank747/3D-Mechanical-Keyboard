@@ -20,6 +20,8 @@ import {
   Volume2, Gamepad2, ShieldCheck
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { MusicPlayer } from "@/components/ui/MusicPlayer";
+import { bgMusic } from "@/lib/bgMusic";
 import { soundEngine } from "@/lib/sound";
 
 export type AppPage = "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "shortcuts";
@@ -116,6 +118,13 @@ export default function KeyboardLandingPage() {
 
     window.addEventListener("keydown", handleShortcutsKeyDown, { capture: true });
     return () => window.removeEventListener("keydown", handleShortcutsKeyDown, { capture: true });
+  }, [currentPage]);
+
+  // Auto-play chill BGM ("Sunlight on the Desk") whenever playing a game
+  useEffect(() => {
+    if (currentPage !== "home") {
+      bgMusic.play();
+    }
   }, [currentPage]);
 
   // Cleanup pending timer on unmount
@@ -259,6 +268,11 @@ export default function KeyboardLandingPage() {
                 3D KEYBOARD
               </span>
             </div>
+          </div>
+
+          {/* Right Side: Chill Vibe BGM Player Widget */}
+          <div className="flex items-center gap-3">
+            <MusicPlayer isDark={isDark} />
           </div>
         </div>
       </header>
