@@ -3,19 +3,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { KEYBOARD_THEMES, type KeyboardTheme } from "@/lib/themes";
-import { 
-  X, Palette, Check,
-  Home as HomeIcon, ChevronRight,
-  Sparkles, Layers, Gamepad2
-} from "lucide-react";
+import { X, Palette, Check } from "lucide-react";
 
 interface ThemeSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   currentTheme: KeyboardTheme;
   onSelectTheme: (theme: KeyboardTheme) => void;
-  currentPage?: "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "shortcuts";
-  onNavigate?: (page: "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "shortcuts") => void;
   colorZones?: boolean;
   onToggleColorZones?: () => void;
 }
@@ -25,8 +19,6 @@ export function ThemeSidebar({
   onClose,
   currentTheme,
   onSelectTheme,
-  currentPage = "home",
-  onNavigate,
   colorZones = true,
   onToggleColorZones,
 }: ThemeSidebarProps) {
@@ -99,7 +91,7 @@ export function ThemeSidebar({
                     Keyboard Theme Palette
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Select a color aesthetic & manage keyboard settings
+                    Customize keycap colors & keyboard aesthetics
                   </p>
                 </div>
               </div>
@@ -111,43 +103,6 @@ export function ThemeSidebar({
               >
                 <X className="w-5 h-5" />
               </button>
-            </div>
-
-            {/* Quick Navigation: Home & Let's Start (Arcade Games Hub) Only */}
-            <div className="p-4 border-b border-slate-200 bg-slate-50/50 space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                {/* 3D Studio Home Button */}
-                <button
-                  onClick={() => {
-                    onNavigate?.("home");
-                    handleClose();
-                  }}
-                  className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all text-left cursor-pointer ${
-                    currentPage === "home"
-                      ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                      : "bg-white border-slate-200 hover:bg-slate-100 text-slate-800 shadow-2xs"
-                  }`}
-                >
-                  <HomeIcon className="w-4 h-4 text-orange-500 shrink-0" />
-                  <span className="font-extrabold text-xs">Studio Home</span>
-                </button>
-
-                {/* Let's Start • Games Hub Button */}
-                <button
-                  onClick={() => {
-                    onNavigate?.("start");
-                    handleClose();
-                  }}
-                  className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all text-left cursor-pointer ${
-                    currentPage === "start"
-                      ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white border-orange-600 shadow-sm ring-1 ring-orange-400"
-                      : "bg-white border-slate-200 hover:bg-orange-50 text-slate-800 shadow-2xs"
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4 text-orange-500 shrink-0" />
-                  <span className="font-extrabold text-xs">Let's Start (Games)</span>
-                </button>
-              </div>
             </div>
 
             {/* Finger Color Zones Toggle Bar */}
