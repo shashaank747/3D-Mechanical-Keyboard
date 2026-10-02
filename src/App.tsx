@@ -268,7 +268,7 @@ export default function KeyboardLandingPage() {
               </span>
               <span className={isDark ? "text-slate-600" : "text-slate-300"}>/</span>
               <span className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                3D KEYBOARD
+                3D Mechanical Keyboard
               </span>
             </div>
           </div>
