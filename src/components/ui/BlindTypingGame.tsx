@@ -119,14 +119,6 @@ export function BlindTypingGame({
 }: BlindTypingGameProps) {
   const isDark = theme.isDark || theme.category === "Dark";
 
-  // Tier filter: "all" | "5-10" | "10-15" | "15-20"
-  const [selectedTier, setSelectedTier] = useState<"all" | "5-10" | "10-15" | "15-20">("all");
-
-  const getFilteredPool = useCallback(() => {
-    if (selectedTier === "all") return ALL_BLIND_PHRASES;
-    return ALL_BLIND_PHRASES.filter((p) => p.tier === selectedTier);
-  }, [selectedTier]);
-
   // Pick random sentence on start
   const [currentPhraseObj, setCurrentPhraseObj] = useState<BlindPhraseItem>(() => {
     const pool = ALL_BLIND_PHRASES;
@@ -136,19 +128,31 @@ export function BlindTypingGame({
 
   const [typedInput, setTypedInput] = useState<string>("");
   const [validationState, setValidationState] = useState<ValidationState>("typing");
+  const [activeChunk, setActiveChunk] = useState<1 | 2>(1); // 1 = First 7-8 words, 2 = Remaining words
   const [mistakesCount, setMistakesCount] = useState<number>(0);
   const [errorIndices, setErrorIndices] = useState<Set<number>>(new Set());
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [speechRate, setSpeechRate] = useState<number>(0.9);
   const [speechMode, setSpeechMode] = useState<"words" | "spelling">("words");
   const [streak, setStreak] = useState<number>(0);
-  const [totalCompleted, setTotalCompleted] = useState<number>(0);
   const [showHint, setShowHint] = useState<boolean>(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const currentPhrase = currentPhraseObj.text;
+
+  // Chunking logic for long sentences (>11 words / 15-20 tier)
+  const words = currentPhrase.split(" ");
+  const isMultiPart = words.length >= 12; // 15-20 words tier
+  const splitWordIndex = isMultiPart ? Math.min(8, Math.floor(words.length / 2)) : words.length;
+
+  const part1Words = words.slice(0, splitWordIndex);
+  const part2Words = words.slice(splitWordIndex);
+
+  const part1Text = part1Words.join(" ");
+  const part2Text = part2Words.join(" ");
+  const part1EndCharIndex = part1Text.length; // Character index where Part 1 ends
 
   // Helper to speak custom voice prompt
   const speakVoiceRemark = useCallback((text: string, onDone?: () => void) => {
@@ -169,49 +173,57 @@ export function BlindTypingGame({
     window.speechSynthesis.speak(utter);
   }, []);
 
-  // Text-to-speech engine for current phrase
-  const speakCurrentPhrase = useCallback(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  // Text-to-speech engine for speaking specific part or full sentence
+  const speakPart = useCallback(
+    (partNumber: 1 | 2) => {
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
 
-    window.speechSynthesis.cancel();
+      const textToSpeak = isMultiPart
+        ? partNumber === 1
+          ? part1Text
+          : part2Text
+        : currentPhrase;
 
-    if (speechMode === "spelling") {
-      const spelledText = currentPhrase
-        .split("")
-        .map((ch) => (ch === " " ? " space " : ` ${ch} `))
-        .join("");
-      const utter = new SpeechSynthesisUtterance(spelledText);
-      utter.rate = speechRate * 0.85;
-      utter.pitch = 1.0;
-      utter.onstart = () => setIsSpeaking(true);
-      utter.onend = () => setIsSpeaking(false);
-      utter.onerror = () => setIsSpeaking(false);
-      window.speechSynthesis.speak(utter);
-    } else {
-      const utter = new SpeechSynthesisUtterance(currentPhrase);
-      utter.rate = speechRate;
-      utter.pitch = 1.0;
-      utter.onstart = () => setIsSpeaking(true);
-      utter.onend = () => setIsSpeaking(false);
-      utter.onerror = () => setIsSpeaking(false);
-      window.speechSynthesis.speak(utter);
-    }
-  }, [currentPhrase, speechRate, speechMode]);
+      if (speechMode === "spelling") {
+        const spelledText = textToSpeak
+          .split("")
+          .map((ch) => (ch === " " ? " space " : ` ${ch} `))
+          .join("");
+        const utter = new SpeechSynthesisUtterance(spelledText);
+        utter.rate = speechRate * 0.85;
+        utter.pitch = 1.0;
+        utter.onstart = () => setIsSpeaking(true);
+        utter.onend = () => setIsSpeaking(false);
+        utter.onerror = () => setIsSpeaking(false);
+        window.speechSynthesis.speak(utter);
+      } else {
+        const utter = new SpeechSynthesisUtterance(textToSpeak);
+        utter.rate = speechRate;
+        utter.pitch = 1.0;
+        utter.onstart = () => setIsSpeaking(true);
+        utter.onend = () => setIsSpeaking(false);
+        utter.onerror = () => setIsSpeaking(false);
+        window.speechSynthesis.speak(utter);
+      }
+    },
+    [isMultiPart, part1Text, part2Text, currentPhrase, speechRate, speechMode]
+  );
 
   // Pick next random sentence
   const nextRandomPhrase = useCallback(() => {
-    const pool = getFilteredPool();
-    // Filter out current so it always changes
+    const pool = ALL_BLIND_PHRASES;
     const otherPool = pool.filter((p) => p.id !== currentPhraseObj.id);
     const candidatePool = otherPool.length > 0 ? otherPool : pool;
     const randomIdx = Math.floor(Math.random() * candidatePool.length);
     setCurrentPhraseObj(candidatePool[randomIdx]);
-  }, [getFilteredPool, currentPhraseObj]);
+  }, [currentPhraseObj]);
 
-  // Reset and speak when phrase changes
+  // Reset and speak Part 1 when phrase changes
   useEffect(() => {
     setTypedInput("");
     setValidationState("typing");
+    setActiveChunk(1);
     setMistakesCount(0);
     setErrorIndices(new Set());
     setShowHint(false);
@@ -219,7 +231,7 @@ export function BlindTypingGame({
     setEndTime(null);
 
     const timer = setTimeout(() => {
-      speakCurrentPhrase();
+      speakPart(1);
       inputRef.current?.focus();
     }, 350);
 
@@ -229,19 +241,20 @@ export function BlindTypingGame({
         window.speechSynthesis.cancel();
       }
     };
-  }, [currentPhraseObj, speakCurrentPhrase]);
+  }, [currentPhraseObj, speakPart]);
 
   const resetCurrentPhrase = useCallback(() => {
     setTypedInput("");
     setValidationState("typing");
+    setActiveChunk(1);
     setMistakesCount(0);
     setErrorIndices(new Set());
     setShowHint(false);
     setStartTime(null);
     setEndTime(null);
-    speakCurrentPhrase();
+    speakPart(1);
     inputRef.current?.focus();
-  }, [speakCurrentPhrase]);
+  }, [speakPart]);
 
   // Keyboard shortcut listener for (Y / N) when minor error prompt is open
   useEffect(() => {
@@ -271,9 +284,18 @@ export function BlindTypingGame({
     const val = e.target.value;
     setTypedInput(val);
 
+    // Multi-part pacing: when user finishes typing Part 1, trigger Part 2 speech!
+    if (isMultiPart && activeChunk === 1 && val.length >= part1EndCharIndex) {
+      setActiveChunk(2);
+      // Small pause then speak Part 2
+      setTimeout(() => {
+        speakPart(2);
+      }, 200);
+    }
+
     const targetLength = currentPhrase.length;
 
-    // When all letters are filled:
+    // When ALL letters of the full sentence are filled:
     if (val.length >= targetLength) {
       const end = Date.now();
       setEndTime(end);
@@ -299,7 +321,6 @@ export function BlindTypingGame({
         // CASE 1: 0 ERRORS -> PERFECT MATCH
         setValidationState("perfect");
         setStreak((prev) => prev + 1);
-        setTotalCompleted((prev) => prev + 1);
         soundEngine.playKeySound("Enter");
         speakVoiceRemark("Perfect match! Well done.");
       } else if (errors === 1 || errors === 2) {
@@ -308,7 +329,7 @@ export function BlindTypingGame({
         soundEngine.playKeySound("Backspace");
         speakVoiceRemark("Not a perfect match. Would you like to type again?");
       } else {
-        // CASE 3: MORE THAN 3 ERRORS (>= 3) -> RESET AND TELL THE SAME LINE AGAIN
+        // CASE 3: MORE THAN 3 ERRORS (>= 3) -> RESET AND TELL PART 1 AGAIN
         setValidationState("major_errors");
         soundEngine.playKeySound("Backspace");
         speakVoiceRemark("More than two mistakes. Let's try that line again.", () => {
@@ -378,8 +399,6 @@ export function BlindTypingGame({
           </div>
         </div>
 
-
-
         {/* Right HUD Badges */}
         <div className="flex items-center gap-2">
           <div
@@ -441,16 +460,20 @@ export function BlindTypingGame({
                 }`}
               ></span>
             </span>
-            <span className="text-[11px] font-black uppercase tracking-wider text-purple-400 flex items-center gap-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
               <Headphones className="w-3 h-3" />
               <span>
                 {isSpeaking
-                  ? "Speaking Audio..."
+                  ? isMultiPart
+                    ? `Speaking Part ${activeChunk} of 2...`
+                    : "Speaking Audio..."
                   : validationState === "minor_errors"
                   ? "Not Perfect Match • Retype or Continue?"
                   : validationState === "major_errors"
                   ? "3+ Errors • Replaying line..."
-                  : `Random Dictation #${currentPhraseObj.id} (${wordCount} words • ${currentPhraseObj.tier} tier)`}
+                  : isMultiPart
+                  ? `Part ${activeChunk}/2 • ${activeChunk === 1 ? `First ${splitWordIndex} Words` : "Remaining Words"} (${wordCount} total words)`
+                  : `Audio Phrase #${currentPhraseObj.id} (${wordCount} words)`}
               </span>
             </span>
           </div>
@@ -459,14 +482,14 @@ export function BlindTypingGame({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                speakCurrentPhrase();
+                speakPart(activeChunk);
                 inputRef.current?.focus();
               }}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
-              title="Hear the phrase again"
+              title={isMultiPart ? `Hear Part ${activeChunk} again` : "Hear the phrase again"}
             >
               <Volume2 className="w-3 h-3" />
-              <span>Hear Again</span>
+              <span>{isMultiPart ? `Hear Part ${activeChunk}` : "Hear Again"}</span>
             </button>
 
             <button
@@ -496,25 +519,45 @@ export function BlindTypingGame({
             >
               {speechRate === 0.75 ? "0.75x" : speechRate === 0.95 ? "1.0x" : "1.2x"}
             </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                resetCurrentPhrase();
+              }}
+              className="p-1 rounded-lg text-slate-400 hover:text-purple-400 transition-colors cursor-pointer"
+              title="Reset phrase"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
         {/* ============================================================ */}
-        {/* VIEW 1: ACTIVE BLINDFOLD TYPING PROGRESS                     */}
+        {/* VIEW 1: ACTIVE BLINDFOLD TYPING PROGRESS (CHUNK-HIGHLIGHTED) */}
         {/* ============================================================ */}
         {validationState === "typing" && (
           <div className="w-full flex flex-col items-center gap-1.5 pt-1 border-t border-purple-500/10">
-            {/* Masked Dots Progress Bar */}
+            {/* Masked Dots Progress Bar with Chunk Highlight Boundaries */}
             <div className="w-full flex flex-wrap items-center justify-center gap-1 p-2 rounded-xl bg-purple-500/5 border border-purple-500/15">
               {targetChars.map((char, idx) => {
                 const isTyped = idx < typedChars.length;
                 const isSpace = char === " ";
+                const isPart1Slot = isMultiPart && idx < part1EndCharIndex;
+                const isCurrentActivePart = isMultiPart
+                  ? (activeChunk === 1 && isPart1Slot) || (activeChunk === 2 && !isPart1Slot)
+                  : true;
 
                 if (isSpace) {
                   return (
                     <div
                       key={idx}
-                      className="w-2 h-5 flex items-center justify-center text-slate-400 opacity-40 font-mono text-[10px]"
+                      className={`w-2 h-5 flex items-center justify-center font-mono text-[10px] ${
+                        idx === part1EndCharIndex && isMultiPart
+                          ? "border-r-2 border-dashed border-purple-500/60 mx-1 text-purple-400 font-black"
+                          : "text-slate-400 opacity-40"
+                      }`}
+                      title={idx === part1EndCharIndex && isMultiPart ? "Boundary: Part 1 / Part 2" : undefined}
                     >
                       ␣
                     </div>
@@ -529,9 +572,13 @@ export function BlindTypingGame({
                         ? isDark
                           ? "bg-purple-500/40 text-purple-300 border border-purple-400 shadow-xs"
                           : "bg-purple-200 text-purple-900 border border-purple-300"
+                        : isCurrentActivePart
+                        ? isDark
+                          ? "bg-purple-950/70 border-2 border-purple-400 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.3)] animate-pulse"
+                          : "bg-purple-50 border-2 border-purple-400 text-purple-700 shadow-xs"
                         : isDark
-                        ? "bg-slate-950/60 border border-slate-800 text-slate-600"
-                        : "bg-slate-100 border border-slate-200 text-slate-400"
+                        ? "bg-slate-950/60 border border-slate-800 text-slate-600 opacity-40"
+                        : "bg-slate-100 border border-slate-200 text-slate-400 opacity-40"
                     }`}
                   >
                     {isTyped ? (showHint ? char : "●") : "○"}
@@ -540,10 +587,17 @@ export function BlindTypingGame({
               })}
             </div>
 
-            {/* Bottom Progress & Peek Trigger */}
+            {/* Bottom Progress & Chunk Indicator */}
             <div className="w-full flex items-center justify-between text-[11px] font-mono px-1">
-              <span className="text-slate-400">
-                Progress: <strong className="text-purple-400">{typedChars.length}</strong> / {targetChars.length} chars
+              <span className="text-slate-400 flex items-center gap-1.5">
+                <span>Progress: <strong className="text-purple-400">{typedChars.length}</strong> / {targetChars.length} chars</span>
+                {isMultiPart && (
+                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider ${
+                    activeChunk === 1 ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  }`}>
+                    {activeChunk === 1 ? "Typing Part 1 (First 7-8 Words)" : "Typing Part 2 (Next Words)"}
+                  </span>
+                )}
               </span>
               <button
                 onClick={(e) => {
@@ -680,7 +734,7 @@ export function BlindTypingGame({
           >
             <div className="flex items-center gap-2">
               <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
-              <span>{mistakesCount} mistakes made. Resetting and telling the sentence again...</span>
+              <span>{mistakesCount} mistakes made. Resetting and telling Part 1 again...</span>
             </div>
             <span className="text-[10px] font-mono animate-pulse">Listening...</span>
           </motion.div>
