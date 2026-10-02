@@ -111,7 +111,7 @@ export function ParallaxFloatingElements() {
   };
 
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden z-20 select-none">
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
       {FLOATING_KEYS.map((item, idx) => {
         const xOffset = useTransform(smoothX, (val) => val * item.depth);
         const yOffset = useTransform(smoothY, (val) => val * item.depth);

@@ -25,10 +25,12 @@ export interface KeyboardProps {
   onOpenThemeSidebar?: () => void;
   testedKeys?: Set<string>;
   onTestedKeysChange?: (tested: Set<string>) => void;
+  targetKeyCode?: string;
+  highlightKeyCodes?: string[];
 }
 
 // Key to touch typing finger color mapping for color zones
-const KEY_ZONE_COLORS: Record<string, string> = {
+export const KEY_ZONE_COLORS: Record<string, string> = {
   // Left Pinky (Rose)
   Escape: "#ef446a", Backquote: "#ef446a", Digit1: "#ef446a", Tab: "#ef446a", KeyQ: "#ef446a",
   CapsLock: "#ef446a", KeyA: "#ef446a", ShiftLeft: "#ef446a", KeyZ: "#ef446a", ControlLeft: "#ef446a",
@@ -65,7 +67,7 @@ const KEY_ZONE_COLORS: Record<string, string> = {
 };
 
 // Key to touch typing finger and hand mapping
-const FINGER_MAPPING: Record<
+export const FINGER_MAPPING: Record<
   string,
   { hand: "left" | "right"; finger: "pinky" | "ring" | "middle" | "index" | "thumb" }
 > = {
@@ -158,7 +160,7 @@ const FINGER_MAPPING: Record<
 };
 
 // 65% Compact Layout - EXACTLY 16.0 units per row
-const LAYOUT_65: KeyItem[][] = [
+export const LAYOUT_65: KeyItem[][] = [
   // Row 1: 1.0 + 12*1.0 + 2.0 + 1.0 = 16.0 units
   [
     { id: "Escape", label: "ESC", code: "Escape", unit: 1.0, variant: "accent" },
@@ -209,7 +211,7 @@ const LAYOUT_65: KeyItem[][] = [
     { id: "KeyL", label: "L", code: "KeyL", unit: 1.0 },
     { id: "Semicolon", label: ";", subLabel: ":", code: "Semicolon", unit: 1.0 },
     { id: "Quote", label: "'", subLabel: '"', code: "Quote", unit: 1.0 },
-    { id: "Enter", label: "ENTER", code: "Enter", unit: 2.25, variant: "accent" },
+    { id: "Enter", label: "ENTER", code: "Enter", unit: 2.25, variant: "modifier" },
     { id: "PageDown", label: "PGDN", code: "PageDown", unit: 1.0, variant: "modifier" },
   ],
   // Row 4: 2.25 + 10*1.0 + 1.75 + 1.0 + 1.0 = 16.0 units
@@ -254,6 +256,8 @@ export function Keyboard({
   onOpenThemeSidebar,
   testedKeys: externalTestedKeys,
   onTestedKeysChange,
+  targetKeyCode,
+  highlightKeyCodes,
 }: KeyboardProps) {
   const plateRef = useRef<HTMLDivElement | null>(null);
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
@@ -483,6 +487,8 @@ export function Keyboard({
                 {row.map((key) => {
                   const isPressed = pressedKeys.has(key.code);
                   const isTested = testedKeys.has(key.code);
+                  const isTarget = key.code === targetKeyCode;
+                  const isHighlighted = highlightKeyCodes ? highlightKeyCodes.includes(key.code) : false;
                   const zoneColor = KEY_ZONE_COLORS[key.code];
                   const isDarkTheme = theme.isDark || theme.category === "Dark";
 
@@ -494,11 +500,15 @@ export function Keyboard({
                       style={{
                         flex: `${key.unit} 0 0%`,
                         borderTopColor:
-                          !isTested && colorZones && !isDarkTheme ? zoneColor : undefined,
+                          !isTested && !isTarget && colorZones && !isDarkTheme ? zoneColor : undefined,
                         borderTopWidth:
-                          !isTested && colorZones && !isDarkTheme ? "2.5px" : undefined,
-                        boxShadow: isTested
+                          !isTested && !isTarget && colorZones && !isDarkTheme ? "2.5px" : undefined,
+                        boxShadow: isTarget
+                          ? `0 0 24px rgba(245,158,11,0.9), 0 0 45px rgba(234,88,12,0.6), inset 0 2px 8px rgba(255,255,255,0.7)`
+                          : isTested
                           ? `0 0 16px rgba(16,185,129,0.5), inset 0 2px 4px rgba(0,0,0,0.25)`
+                          : isHighlighted
+                          ? `0 0 14px rgba(59,130,246,0.6), inset 0 2px 4px rgba(255,255,255,0.4)`
                           : colorZones && zoneColor && isDarkTheme
                           ? isPressed
                             ? `0 0 24px ${zoneColor}, 0 -2px 14px ${zoneColor}, inset 0 2px 6px ${zoneColor}, inset 0 0 8px ${zoneColor}`
@@ -525,11 +535,24 @@ export function Keyboard({
                       }
                       onTouchEnd={allowMouseClick ? () => handleVirtualKeyUp(key) : undefined}
                       className={cn(
-                        getKeyClasses(key, isPressed, isTested)
+                        getKeyClasses(key, isPressed, isTested),
+                        isTarget &&
+                          "!bg-gradient-to-b !from-amber-400 !via-orange-500 !to-amber-600 !text-white !border-amber-400 !border-b-[3px] !border-b-amber-800 ring-4 ring-amber-400/90 ring-offset-2 ring-offset-slate-900 animate-pulse scale-105 z-20 shadow-2xl",
+                        !isTarget &&
+                          isHighlighted &&
+                          "ring-2 ring-blue-400/80 !border-blue-400 bg-blue-500/10"
                       )}
                     >
-                      {/* RGB Neon Top Rim Glow Bar (Only for Dark Themes when not tested) */}
-                      {!isTested && colorZones && zoneColor && isDarkTheme && (
+                      {/* Animated Target Ping Beacon */}
+                      {isTarget && (
+                        <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 pointer-events-none z-30">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-90"></span>
+                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-400 border border-white shadow-md"></span>
+                        </span>
+                      )}
+
+                      {/* RGB Neon Top Rim Glow Bar (Only for Dark Themes when not tested or targeted) */}
+                      {!isTested && !isTarget && colorZones && zoneColor && isDarkTheme && (
                         <span
                           className="absolute inset-x-1.5 top-0.5 h-[2px] rounded-full pointer-events-none transition-all duration-150"
                           style={{
@@ -541,8 +564,8 @@ export function Keyboard({
                         />
                       )}
 
-                      {/* Ambient Key Perimeter RGB Underglow (Only for Dark Themes when not tested) */}
-                      {!isTested && colorZones && zoneColor && isDarkTheme && (
+                      {/* Ambient Key Perimeter RGB Underglow */}
+                      {!isTested && !isTarget && colorZones && zoneColor && isDarkTheme && (
                         <span
                           className="absolute -inset-[1px] rounded-xl pointer-events-none transition-all duration-150 -z-10"
                           style={{
@@ -554,13 +577,23 @@ export function Keyboard({
                       {/* Key Legend */}
                       {key.subLabel ? (
                         <div className="flex flex-col items-center justify-center leading-none py-0.5 pointer-events-none">
-                          <span className={cn("text-[10px] sm:text-[11px] font-semibold", isTested ? "text-white/80" : "opacity-60")}>
+                          <span
+                            className={cn(
+                              "text-[10px] sm:text-[11px] font-semibold",
+                              isTested || isTarget ? "text-white/90 font-bold" : "opacity-60"
+                            )}
+                          >
                             {key.subLabel}
                           </span>
                           <span className="text-xs sm:text-sm font-extrabold mt-0.5">{key.label}</span>
                         </div>
                       ) : (
-                        <span className="text-xs sm:text-sm font-extrabold tracking-tight pointer-events-none">
+                        <span
+                          className={cn(
+                            "text-xs sm:text-sm font-extrabold tracking-tight pointer-events-none",
+                            isTarget && "tracking-wider text-base"
+                          )}
+                        >
                           {key.label}
                         </span>
                       )}

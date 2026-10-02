@@ -8,21 +8,29 @@ import { GlowingSmokeBackground } from "@/components/ui/GlowingSmokeBackground";
 import { ParallaxFloatingElements } from "@/components/ui/ParallaxFloatingElements";
 import { SwitchShowcase } from "@/components/ui/SwitchShowcase";
 import { ExplodedKeyboardScroll } from "@/components/ui/ExplodedKeyboardScroll";
+import { KeyboardGame } from "@/components/ui/KeyboardGame";
+import { GamesHub } from "@/components/ui/GamesHub";
+import { FallingWordsGame } from "@/components/ui/FallingWordsGame";
+import { SoundMatrixGame } from "@/components/ui/SoundMatrixGame";
 import { KEYBOARD_THEMES, type KeyboardTheme } from "@/lib/themes";
 import { 
-  Keyboard as KeyboardIcon, Sparkles, Copy, 
+  Keyboard as KeyboardIcon, Sparkles, 
   Check, RotateCcw, Flame, Palette,
-  Play, ArrowLeft, ArrowDown, BookOpen, Layers
+  Play, ArrowLeft, ArrowDown, BookOpen, Layers, Menu,
+  Volume2, Gamepad2
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
+export type AppPage = "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "shortcuts";
+
 export default function KeyboardLandingPage() {
-  const [copied, setCopied] = useState(false);
-  const [currentPage, setCurrentPage] = useState<"home" | "speedtest" | "shortcuts">("home");
+  const [currentPage, setCurrentPage] = useState<AppPage>("home");
   const [currentTheme, setCurrentTheme] = useState<KeyboardTheme>(KEYBOARD_THEMES[0]);
   const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState(false);
   const [colorZones, setColorZones] = useState<boolean>(true);
   const [testedKeys, setTestedKeys] = useState<Set<string>>(new Set());
+  const [lastTriggeredKey, setLastTriggeredKey] = useState<{ key: string; code: string; time: number } | null>(null);
+  const [totalKeyHits, setTotalKeyHits] = useState<number>(0);
 
   // Speed test state
   const testPhrases = [
@@ -53,15 +61,9 @@ export default function KeyboardLandingPage() {
 
   const targetPhrase = testPhrases[currentPhraseIndex];
 
-  const handleKeyTriggered = (_key: string, _code: string) => {
-    // Key press event
-  };
-
-  const handleCopySnippet = () => {
-    const code = `"use client";\n\nimport Keyboard from "@/components/ui/keyboard";\n\nexport default function KeyboardDemo() {\n  return (\n    <div className="flex w-full items-center justify-center p-4">\n      <Keyboard className="mx-auto" />\n    </div>\n  );\n}`;
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleKeyTriggered = (key: string, code: string) => {
+    setLastTriggeredKey({ key, code, time: Date.now() });
+    setTotalKeyHits((prev) => prev + 1);
   };
 
   const handleTestTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,8 +134,8 @@ export default function KeyboardLandingPage() {
       {/* Dynamic Glowing Smoke Background Effect (Shared Across All Pages) */}
       <GlowingSmokeBackground theme={currentTheme} />
 
-      {/* Floating 3D Parallax Keycap Elements */}
-      <ParallaxFloatingElements />
+      {/* Floating 3D Parallax Keycap Elements (Home Hero Page Only) */}
+      {currentPage === "home" && <ParallaxFloatingElements />}
 
       {/* Sticky Glassmorphic Top Navigation */}
       <header
@@ -142,9 +144,23 @@ export default function KeyboardLandingPage() {
         } px-4 sm:px-8 py-3.5 transition-colors shadow-xs`}
       >
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-          {/* Brand Logo & Back to Home */}
+          {/* Left Side: Burger Menu (Keyboard Theme Palette & Navigation) + Logo */}
           <div className="flex items-center gap-3">
-            {currentPage !== "home" ? (
+            {/* Burger Menu Button */}
+            <button
+              onClick={() => setIsThemeSidebarOpen(true)}
+              className={`p-2.5 rounded-xl shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center border ${
+                isDark
+                  ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white"
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+              }`}
+              aria-label="Keyboard Theme Palette"
+              title="Keyboard Theme Palette"
+            >
+              <Menu className="w-5 h-5 text-orange-500" />
+            </button>
+
+            {currentPage !== "home" && (
               <button
                 onClick={() => setCurrentPage("home")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-600 text-white text-xs font-bold shadow-md hover:bg-orange-500 transition-all cursor-pointer"
@@ -152,116 +168,29 @@ export default function KeyboardLandingPage() {
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Home</span>
               </button>
-            ) : (
+            )}
+
+            {currentPage !== "home" && currentPage !== "start" && (
               <button
-                onClick={() => setIsThemeSidebarOpen(true)}
-                className={`p-2 rounded-xl shadow-md hover:scale-105 transition-transform cursor-pointer flex items-center justify-center relative ${
-                  isDark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
+                onClick={() => setCurrentPage("start")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                  isDark ? "bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700 hover:text-white" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                 }`}
-                title="Click to open Theme Drawer"
               >
-                <KeyboardIcon className="w-5 h-5 text-orange-400" />
-                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500"></span>
-                </span>
+                <Gamepad2 className="w-3.5 h-3.5 text-orange-500" />
+                <span>Games Hub</span>
               </button>
             )}
 
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-black tracking-widest uppercase bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-500 bg-clip-text text-transparent">
-                  SETU
-                </span>
-                <span className={isDark ? "text-slate-600" : "text-slate-300"}>/</span>
-                <span className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                  3D KEYBOARD
-                </span>
-              </div>
-              <span className={`text-[10px] font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                Web Audio • 16.0u ANSI • {currentTheme.name}
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-black tracking-widest uppercase bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-500 bg-clip-text text-transparent">
+                SETU
+              </span>
+              <span className={isDark ? "text-slate-600" : "text-slate-300"}>/</span>
+              <span className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+                3D KEYBOARD
               </span>
             </div>
-          </div>
-
-          {/* Navigation Links & Action Controls */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Speed Test Page Button */}
-            <button
-              onClick={() => setCurrentPage(currentPage === "speedtest" ? "home" : "speedtest")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                currentPage === "speedtest"
-                  ? "bg-orange-500 text-white border-orange-600 shadow-md"
-                  : isDark
-                  ? "bg-slate-900/90 border-slate-700 text-slate-200 hover:bg-slate-800"
-                  : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
-              }`}
-            >
-              <Flame className="w-3.5 h-3.5 text-orange-500" />
-              <span className="hidden sm:inline">Speed Test</span>
-            </button>
-
-            {/* Shortcuts Guide Button */}
-            <button
-              onClick={() => setCurrentPage(currentPage === "shortcuts" ? "home" : "shortcuts")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                currentPage === "shortcuts"
-                  ? "bg-indigo-600 text-white border-indigo-700 shadow-md"
-                  : isDark
-                  ? "bg-slate-900/90 border-slate-700 text-slate-200 hover:bg-slate-800"
-                  : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="hidden sm:inline">Shortcuts</span>
-            </button>
-
-            {/* Theme Palettes Drawer Trigger */}
-            <button
-              onClick={() => setIsThemeSidebarOpen(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                isDark
-                  ? "bg-slate-900/90 border-slate-700 text-slate-200 hover:bg-slate-800"
-                  : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
-              }`}
-            >
-              <Palette className="w-3.5 h-3.5 text-orange-500" />
-              <span className="hidden md:inline">Themes</span>
-            </button>
-
-            {/* Color Zones Toggle */}
-            <button
-              onClick={() => setColorZones((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                colorZones
-                  ? "bg-orange-500 text-white border-orange-600 shadow-[0_2px_8px_rgba(249,115,22,0.3)]"
-                  : isDark
-                  ? "bg-slate-900/90 border-slate-700 text-slate-300 hover:bg-slate-800"
-                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-              }`}
-              title="Toggle Finger Touch-Typing Color Zones"
-            >
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  colorZones ? "bg-white animate-pulse" : "bg-slate-400"
-                }`}
-              />
-              <span className="hidden sm:inline">{colorZones ? "Zones ON" : "Zones OFF"}</span>
-            </button>
-
-            {/* Code Snippet Button */}
-            <button
-              onClick={handleCopySnippet}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-xs cursor-pointer ${
-                isDark
-                  ? "bg-slate-900/90 border-slate-700 text-slate-200 hover:bg-slate-800"
-                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-              }`}
-              title="Copy Component Usage"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
-              <span className="hidden lg:inline">{copied ? "Copied" : "Code"}</span>
-            </button>
           </div>
         </div>
       </header>
@@ -331,36 +260,48 @@ export default function KeyboardLandingPage() {
               className="mt-8 flex flex-wrap items-center justify-center gap-3"
             >
               <button
-                onClick={scrollToKeyboard}
-                className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-orange-600 text-white font-bold text-sm shadow-xl hover:bg-orange-500 hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+                onClick={() => setCurrentPage("start")}
+                className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold text-sm shadow-xl hover:from-orange-500 hover:to-amber-500 hover:scale-105 active:scale-95 transition-all cursor-pointer group ring-2 ring-orange-400/40"
               >
-                <Play className="w-4 h-4 text-white fill-white group-hover:translate-x-0.5 transition-transform" />
-                <span>Test Drive Live</span>
-                <ArrowDown className="w-4 h-4 ml-1 opacity-70 group-hover:translate-y-0.5 transition-transform" />
+                <Sparkles className="w-4 h-4 text-white fill-white group-hover:rotate-12 transition-transform" />
+                <span>Let's Start Training</span>
+              </button>
+
+              <button
+                onClick={scrollToKeyboard}
+                className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl border font-bold text-sm shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
+                  isDark
+                    ? "bg-slate-900/90 border-slate-700 text-white hover:bg-slate-800"
+                    : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
+                }`}
+              >
+                <Play className="w-4 h-4 text-orange-500 fill-orange-500" />
+                <span>Test Workbench</span>
+                <ArrowDown className="w-4 h-4 ml-0.5 opacity-70" />
               </button>
 
               <button
                 onClick={() => setCurrentPage("speedtest")}
-                className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl border font-bold text-sm shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl border font-bold text-sm shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
                   isDark
                     ? "bg-slate-900/90 border-slate-700 text-white hover:bg-slate-800"
                     : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
                 }`}
               >
                 <Flame className="w-4 h-4 text-orange-500" />
-                <span>Speed Typing Arena</span>
+                <span>Speed Arena</span>
               </button>
 
               <button
                 onClick={() => setIsThemeSidebarOpen(true)}
-                className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl border font-bold text-sm hover:scale-105 transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-4 py-3.5 rounded-2xl border font-bold text-sm hover:scale-105 transition-all cursor-pointer ${
                   isDark
                     ? "bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800"
                     : "bg-white/80 border-slate-200 text-slate-700 hover:bg-white"
                 }`}
               >
                 <Palette className="w-4 h-4 text-indigo-400" />
-                <span>Explore 8 Themes</span>
+                <span>Themes</span>
               </button>
             </motion.div>
           </section>
@@ -382,7 +323,53 @@ export default function KeyboardLandingPage() {
       )}
 
       {/* ============================================================ */}
-      {/* PAGE 2: SPEED TEST ARENA PAGE                                */}
+      {/* PAGE: LET'S START - ARCADE GAMES HUB SELECTOR                 */}
+      {/* ============================================================ */}
+      {currentPage === "start" && (
+        <GamesHub
+          theme={currentTheme}
+          onSelectGame={(gameId) => setCurrentPage(gameId as AppPage)}
+        />
+      )}
+
+      {/* ============================================================ */}
+      {/* GAME 1: TOUCH TYPING ACADEMY (16-LEVEL COMPREHENSIVE ENGINE) */}
+      {/* ============================================================ */}
+      {currentPage === "academy" && (
+        <KeyboardGame
+          theme={currentTheme}
+          colorZones={colorZones}
+          onOpenThemeSidebar={() => setIsThemeSidebarOpen(true)}
+          onBackToHome={() => setCurrentPage("start")}
+        />
+      )}
+
+      {/* ============================================================ */}
+      {/* GAME 2: METEOR DEFENSE (FALLING WORDS ARCADE)                */}
+      {/* ============================================================ */}
+      {currentPage === "fallingwords" && (
+        <FallingWordsGame
+          theme={currentTheme}
+          colorZones={colorZones}
+          onOpenThemeSidebar={() => setIsThemeSidebarOpen(true)}
+          onBackToHub={() => setCurrentPage("start")}
+        />
+      )}
+
+      {/* ============================================================ */}
+      {/* GAME 3: SOUND MATRIX ECHO (SWITCH ACOUSTIC SIMON SAYS)       */}
+      {/* ============================================================ */}
+      {currentPage === "soundmatrix" && (
+        <SoundMatrixGame
+          theme={currentTheme}
+          colorZones={colorZones}
+          onOpenThemeSidebar={() => setIsThemeSidebarOpen(true)}
+          onBackToHub={() => setCurrentPage("start")}
+        />
+      )}
+
+      {/* ============================================================ */}
+      {/* GAME 4: SPEED TEST ARENA PAGE                                */}
       {/* ============================================================ */}
       {currentPage === "speedtest" && (
         <section className="relative z-10 w-full max-w-5xl px-4 py-8 flex flex-col items-center gap-6 animate-in fade-in duration-300">
@@ -404,13 +391,13 @@ export default function KeyboardLandingPage() {
             </div>
 
             <button
-              onClick={() => setCurrentPage("home")}
+              onClick={() => setCurrentPage("start")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
                 isDark ? "bg-slate-800 text-white border-slate-700 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
               }`}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Studio</span>
+              <span>Back to Games Hub</span>
             </button>
           </div>
 
@@ -499,7 +486,7 @@ export default function KeyboardLandingPage() {
       )}
 
       {/* ============================================================ */}
-      {/* PAGE 3: SHORTCUTS GUIDE PAGE                                 */}
+      {/* GAME 5: SHORTCUTS GUIDE PAGE                                 */}
       {/* ============================================================ */}
       {currentPage === "shortcuts" && (
         <section className="relative z-10 w-full max-w-5xl px-4 py-8 flex flex-col items-center gap-6 animate-in fade-in duration-300">
@@ -512,7 +499,7 @@ export default function KeyboardLandingPage() {
               </span>
               <div>
                 <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                  Keyboard Shortcuts Guide
+                  Keyboard Shortcuts Guide & Dojo
                 </h2>
                 <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                   Comprehensive standard shortcut reference matrix for power users & developers
@@ -521,13 +508,13 @@ export default function KeyboardLandingPage() {
             </div>
 
             <button
-              onClick={() => setCurrentPage("home")}
+              onClick={() => setCurrentPage("start")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
                 isDark ? "bg-slate-800 text-white border-slate-700 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
               }`}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Studio</span>
+              <span>Back to Games Hub</span>
             </button>
           </div>
 
@@ -573,21 +560,23 @@ export default function KeyboardLandingPage() {
         </section>
       )}
 
-      {/* Footer */}
-      <footer
-        className={`relative z-10 w-full border-t ${currentTheme.headerBorder} py-8 px-6 mt-12 bg-white/40 backdrop-blur-md transition-colors`}
-      >
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs opacity-75">
-          <div className="flex items-center gap-2">
-            <span className="font-mono font-black text-orange-600">SETU</span>
-            <span>•</span>
-            <span className="font-semibold">3D Mechanical Keyboard Engine</span>
+      {/* Footer (Hidden during interactive gameplay views for zero-scroll viewport) */}
+      {currentPage !== "academy" && currentPage !== "fallingwords" && currentPage !== "soundmatrix" && (
+        <footer
+          className={`relative z-10 w-full border-t ${currentTheme.headerBorder} py-8 px-6 mt-12 bg-white/40 backdrop-blur-md transition-colors`}
+        >
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs opacity-75">
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-black text-orange-600">SETU</span>
+              <span>•</span>
+              <span className="font-semibold">3D Mechanical Keyboard Engine</span>
+            </div>
+            <div>
+              <span>Crafted with React, Framer Motion & Tailwind CSS</span>
+            </div>
           </div>
-          <div>
-            <span>Crafted with React, Framer Motion & Tailwind CSS</span>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
 
       {/* Slide-over Theme Sidebar Drawer */}
       <ThemeSidebar
@@ -595,6 +584,10 @@ export default function KeyboardLandingPage() {
         onClose={() => setIsThemeSidebarOpen(false)}
         currentTheme={currentTheme}
         onSelectTheme={(theme) => setCurrentTheme(theme)}
+        currentPage={currentPage}
+        onNavigate={(page) => setCurrentPage(page)}
+        colorZones={colorZones}
+        onToggleColorZones={() => setColorZones((prev) => !prev)}
       />
     </div>
   );
