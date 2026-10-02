@@ -874,13 +874,13 @@ export default function KeyboardLandingPage() {
       <AnimatePresence>
         {isLoginModalOpen && (
           <div className="fixed inset-0 z-50 flex flex-col items-center justify-between p-2 sm:p-4 bg-slate-950/40 backdrop-blur-xl overflow-hidden">
-            {/* Horizontal Wide & Low-Profile Wing Card */}
+            {/* Horizontal Wide & Spacious Wing Card */}
             <motion.div
               initial={{ opacity: 0, y: -30, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.98 }}
               transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className={`w-full max-w-5xl px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl sm:rounded-3xl border-2 shadow-[0_15px_40px_rgba(234,88,12,0.2)] relative z-20 backdrop-blur-2xl flex flex-col gap-2 ${
+              className={`w-full max-w-5xl px-5 sm:px-8 py-5 sm:py-6 rounded-2xl sm:rounded-3xl border-2 shadow-[0_15px_40px_rgba(234,88,12,0.25)] relative z-20 backdrop-blur-2xl flex flex-col gap-3.5 ${
                 isDark
                   ? "bg-slate-900/95 border-orange-500/40 text-white"
                   : "bg-white/95 border-orange-500/40 text-slate-900"
@@ -892,7 +892,7 @@ export default function KeyboardLandingPage() {
                   setIsLoginModalOpen(false);
                   setLoginWarningMessage(null);
                 }}
-                className="absolute top-2.5 sm:top-3 right-3 sm:right-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all cursor-pointer z-30"
+                className="absolute top-3.5 sm:top-4 right-3.5 sm:right-4 p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all cursor-pointer z-30"
                 title="Close"
               >
                 <X className="w-4 h-4" />
@@ -903,10 +903,10 @@ export default function KeyboardLandingPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-1.5 sm:p-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500 text-xs font-bold flex items-center justify-between gap-2 shadow-xs"
+                  className="p-2 sm:p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500 text-xs font-bold flex items-center justify-between gap-2 shadow-xs"
                 >
-                  <div className="flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 animate-bounce" />
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0 animate-bounce" />
                     <span>{loginWarningMessage}</span>
                   </div>
                   <span className="text-[10px] font-mono opacity-80 uppercase hidden sm:inline">Authentication Required</span>
@@ -914,32 +914,32 @@ export default function KeyboardLandingPage() {
               )}
 
               {/* Horizontal Row: Left info & tabs + Right form controls */}
-              <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-3">
+              <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-4 pr-6 sm:pr-8">
                 {/* Left Branding & Mode Switcher */}
-                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 shrink-0">
-                  <div className="p-2 rounded-xl bg-orange-500/20 text-orange-500 border border-orange-500/30 shadow-xs">
-                    {authMode === "signin" ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                <div className="flex flex-wrap items-center gap-3 sm:gap-3.5 shrink-0">
+                  <div className="p-2.5 sm:p-3 rounded-2xl bg-orange-500/20 text-orange-500 border border-orange-500/30 shadow-xs">
+                    {authMode === "signin" ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
                   </div>
                   <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs sm:text-sm font-black tracking-tight">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm sm:text-base font-black tracking-tight">
                         {authMode === "signin" ? "Student / Dev Sign In" : "Create Account"}
                       </span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-orange-500 text-white font-mono uppercase font-bold">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500 text-white font-mono uppercase font-bold">
                         SETU
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-400 hidden sm:inline">
+                    <span className="text-xs text-slate-400 hidden sm:inline mt-0.5">
                       {authMode === "signin" ? "Unlock Let's Play & save typing scores" : "Join to save high-scores & streaks"}
                     </span>
                   </div>
 
                   {/* Auth Mode Toggle Pill */}
-                  <div className="flex rounded-lg p-0.5 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 ml-1">
+                  <div className="flex rounded-xl p-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 ml-1">
                     <button
                       type="button"
                       onClick={() => setAuthMode("signin")}
-                      className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                         authMode === "signin"
                           ? "bg-orange-500 text-white shadow-xs"
                           : "text-slate-400 hover:text-slate-200"
@@ -950,7 +950,7 @@ export default function KeyboardLandingPage() {
                     <button
                       type="button"
                       onClick={() => setAuthMode("signup")}
-                      className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                         authMode === "signup"
                           ? "bg-orange-500 text-white shadow-xs"
                           : "text-slate-400 hover:text-slate-200"
@@ -961,7 +961,7 @@ export default function KeyboardLandingPage() {
                   </div>
                 </div>
 
-                {/* Right Form Inputs (Horizontally Aligned) */}
+                {/* Right Form Inputs (Horizontally Aligned with generous vertical padding) */}
                 <div className="flex-1 w-full lg:w-auto flex justify-end">
                   {authMode === "signin" ? (
                     <form
@@ -980,7 +980,7 @@ export default function KeyboardLandingPage() {
                           confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
                         }
                       }}
-                      className="w-full flex flex-wrap sm:flex-nowrap items-center gap-2 justify-end"
+                      className="w-full flex flex-wrap sm:flex-nowrap items-center gap-2.5 justify-end"
                     >
                       <input
                         type="text"
@@ -988,7 +988,7 @@ export default function KeyboardLandingPage() {
                         placeholder="example@gmail.com"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
-                        className={`w-full sm:w-48 px-3 py-1.5 rounded-xl border text-xs font-medium outline-none transition-all ${
+                        className={`w-full sm:w-52 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
@@ -1001,7 +1001,7 @@ export default function KeyboardLandingPage() {
                         placeholder="Password"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                        className={`w-full sm:w-36 px-3 py-1.5 rounded-xl border text-xs font-medium outline-none transition-all ${
+                        className={`w-full sm:w-40 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
@@ -1010,7 +1010,7 @@ export default function KeyboardLandingPage() {
 
                       <button
                         type="submit"
-                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs tracking-wider uppercase shadow-md shadow-orange-500/25 transition-all cursor-pointer whitespace-nowrap"
+                        className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-md shadow-orange-500/25 transition-all cursor-pointer whitespace-nowrap"
                       >
                         Sign In & Play
                       </button>
@@ -1033,7 +1033,7 @@ export default function KeyboardLandingPage() {
                           confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
                         }
                       }}
-                      className="w-full flex flex-wrap sm:flex-nowrap items-center gap-2 justify-end"
+                      className="w-full flex flex-wrap sm:flex-nowrap items-center gap-2.5 justify-end"
                     >
                       <input
                         type="text"
@@ -1041,7 +1041,7 @@ export default function KeyboardLandingPage() {
                         placeholder="Full Name"
                         value={signupName}
                         onChange={(e) => setSignupName(e.target.value)}
-                        className={`w-full sm:w-36 px-3 py-1.5 rounded-xl border text-xs font-medium outline-none transition-all ${
+                        className={`w-full sm:w-40 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
@@ -1054,7 +1054,7 @@ export default function KeyboardLandingPage() {
                         placeholder="example@gmail.com"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
-                        className={`w-full sm:w-44 px-3 py-1.5 rounded-xl border text-xs font-medium outline-none transition-all ${
+                        className={`w-full sm:w-48 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
@@ -1067,7 +1067,7 @@ export default function KeyboardLandingPage() {
                         placeholder="Password"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
-                        className={`w-full sm:w-32 px-3 py-1.5 rounded-xl border text-xs font-medium outline-none transition-all ${
+                        className={`w-full sm:w-36 px-3.5 py-2.5 sm:py-3 rounded-xl border text-sm font-medium outline-none transition-all ${
                           isDark
                             ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
                             : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
@@ -1076,7 +1076,7 @@ export default function KeyboardLandingPage() {
 
                       <button
                         type="submit"
-                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs tracking-wider uppercase shadow-md shadow-orange-500/25 transition-all cursor-pointer whitespace-nowrap"
+                        className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-md shadow-orange-500/25 transition-all cursor-pointer whitespace-nowrap"
                       >
                         Create & Play
                       </button>
