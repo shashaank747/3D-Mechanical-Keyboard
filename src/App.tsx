@@ -273,7 +273,7 @@ export default function KeyboardLandingPage() {
             </div>
           </div>
 
-          {/* Center Badges (Visible on larger screens) */}
+          {/* Center Badges */}
           <div className="hidden md:flex items-center gap-2.5">
             {/* Live Keystroke Hit Counter */}
             <div
@@ -287,39 +287,9 @@ export default function KeyboardLandingPage() {
               <Flame className="w-3.5 h-3.5 text-orange-500 animate-pulse" />
               <span>{totalKeyHits} Hits</span>
             </div>
-
-            {/* Active Switch Sound Profile */}
-            <div
-              className={`hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all ${
-                isDark
-                  ? "bg-purple-950/40 border-purple-500/30 text-purple-300"
-                  : "bg-purple-50 border-purple-200 text-purple-900"
-              }`}
-            >
-              <Volume2 className="w-3.5 h-3.5 text-purple-400" />
-              <span>Mechanical Acoustics</span>
-            </div>
-
-            {/* Active Theme Pill */}
-            <button
-              onClick={() => setIsThemeSidebarOpen(true)}
-              className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer ${
-                isDark
-                  ? "bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900 shadow-2xs"
-              }`}
-              title="Click to change keyboard theme"
-            >
-              <span
-                className="w-2.5 h-2.5 rounded-full ring-1 ring-black/20"
-                style={{ backgroundColor: currentTheme.previewColors[3] || currentTheme.previewColors[0] }}
-              />
-              <span>{currentTheme.name}</span>
-              <Palette className="w-3 h-3 text-orange-500 opacity-80" />
-            </button>
           </div>
 
-          {/* Right Side Actions: Let's Play CTA + Theme Button + Chill Vibe BGM Player */}
+          {/* Right Side Actions: Let's Play CTA + Chill Vibe BGM Player */}
           <div className="flex items-center gap-2.5">
             {currentPage === "home" && (
               <button
@@ -330,18 +300,6 @@ export default function KeyboardLandingPage() {
                 <span>Let's Play</span>
               </button>
             )}
-
-            <button
-              onClick={() => setIsThemeSidebarOpen(true)}
-              className={`p-2 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer ${
-                isDark
-                  ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
-                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-              }`}
-              title="Theme Palette"
-            >
-              <Palette className="w-4 h-4 text-orange-500" />
-            </button>
 
             {currentPage !== "home" && <MusicPlayer isDark={isDark} />}
           </div>
