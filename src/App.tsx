@@ -18,7 +18,7 @@ import {
   Keyboard as KeyboardIcon, Sparkles, 
   Check, RotateCcw, Flame, Palette,
   Play, ArrowLeft, ArrowDown, BookOpen, Layers, Menu,
-  Volume2, Gamepad2, ShieldCheck
+  Volume2, Gamepad2, ShieldCheck, LogIn, User, X
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { MusicPlayer } from "@/components/ui/MusicPlayer";
@@ -31,6 +31,10 @@ export default function KeyboardLandingPage() {
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
   const [currentTheme, setCurrentTheme] = useState<KeyboardTheme>(KEYBOARD_THEMES[0]);
   const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [colorZones, setColorZones] = useState<boolean>(true);
   const [testedKeys, setTestedKeys] = useState<Set<string>>(new Set());
   const [lastTriggeredKey, setLastTriggeredKey] = useState<{ key: string; code: string; time: number } | null>(null);
@@ -289,7 +293,7 @@ export default function KeyboardLandingPage() {
             </div>
           </div>
 
-          {/* Right Side Actions: Let's Play CTA + Chill Vibe BGM Player */}
+          {/* Right Side Actions: Let's Play CTA + Login Button + Chill Vibe BGM Player */}
           <div className="flex items-center gap-2.5">
             {currentPage === "home" && (
               <button
@@ -298,6 +302,34 @@ export default function KeyboardLandingPage() {
               >
                 <Gamepad2 className="w-4 h-4" />
                 <span>Let's Play</span>
+              </button>
+            )}
+
+            {/* Login Button / User Profile */}
+            {loggedInUser ? (
+              <button
+                onClick={() => setLoggedInUser(null)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                  isDark
+                    ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white"
+                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+                title="Click to logout"
+              >
+                <User className="w-3.5 h-3.5 text-orange-500" />
+                <span>{loggedInUser}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs hover:scale-105 active:scale-95 cursor-pointer ${
+                  isDark
+                    ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white"
+                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                <LogIn className="w-3.5 h-3.5 text-orange-500" />
+                <span>Login</span>
               </button>
             )}
 
@@ -794,6 +826,108 @@ export default function KeyboardLandingPage() {
         colorZones={colorZones}
         onToggleColorZones={() => setColorZones((prev) => !prev)}
       />
+
+      {/* Interactive Login Modal */}
+      <AnimatePresence>
+        {isLoginModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className={`w-full max-w-md p-6 sm:p-8 rounded-3xl border shadow-2xl relative ${
+                isDark ? "bg-slate-900/95 border-slate-800 text-white" : "bg-white/95 border-slate-200 text-slate-900"
+              }`}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setIsLoginModalOpen(false)}
+                className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-orange-500/20 text-orange-500 border border-orange-500/30">
+                    <LogIn className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">Student / Dev Login</h3>
+                    <p className="text-xs text-slate-400">Sign in to save your typing records & streaks</p>
+                  </div>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (loginEmail.trim()) {
+                      setLoggedInUser(loginEmail.split("@")[0]);
+                      setIsLoginModalOpen(false);
+                      setLoginEmail("");
+                      setLoginPassword("");
+                    }
+                  }}
+                  className="flex flex-col gap-3.5"
+                >
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-400">Username or Email</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. shashaank or student@setu.io"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${
+                        isDark
+                          ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                          : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                      }`}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-400">Password</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${
+                        isDark
+                          ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                          : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                      }`}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs tracking-wider uppercase shadow-lg shadow-orange-500/25 transition-all cursor-pointer mt-2"
+                  >
+                    Sign In to 3D Keyboard
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoggedInUser("Guest Typist");
+                      setIsLoginModalOpen(false);
+                    }}
+                    className={`w-full py-2.5 px-4 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      isDark
+                        ? "bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-800"
+                        : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    Continue as Guest
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
