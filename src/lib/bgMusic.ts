@@ -45,7 +45,8 @@ class BackgroundMusicEngine {
 
   constructor() {
     if (typeof window !== "undefined") {
-      this.initAudio(0);
+      const initialRandomIndex = Math.floor(Math.random() * PLAYLIST.length);
+      this.initAudio(initialRandomIndex);
     }
   }
 
@@ -74,7 +75,7 @@ class BackgroundMusicEngine {
         this.notify();
       });
 
-      // When the current track ends, automatically advance and play the next song in the playlist!
+      // When the current track ends, randomly pick another song from the playlist!
       this.audio.addEventListener("ended", () => {
         this.nextTrack(true);
       });
@@ -118,7 +119,12 @@ class BackgroundMusicEngine {
   }
 
   public nextTrack(autoPlay = true) {
-    const nextIdx = (this.currentTrackIndex + 1) % PLAYLIST.length;
+    // Pick another random song from playlist to eliminate repeating pattern
+    const otherIndices = PLAYLIST.map((_, i) => i).filter((i) => i !== this.currentTrackIndex);
+    const nextIdx = otherIndices.length > 0
+      ? otherIndices[Math.floor(Math.random() * otherIndices.length)]
+      : (this.currentTrackIndex + 1) % PLAYLIST.length;
+
     this.currentTrackIndex = nextIdx;
     if (this.audio) {
       this.audio.src = PLAYLIST[nextIdx].src;
@@ -132,7 +138,11 @@ class BackgroundMusicEngine {
   }
 
   public prevTrack(autoPlay = true) {
-    const prevIdx = (this.currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+    const otherIndices = PLAYLIST.map((_, i) => i).filter((i) => i !== this.currentTrackIndex);
+    const prevIdx = otherIndices.length > 0
+      ? otherIndices[Math.floor(Math.random() * otherIndices.length)]
+      : (this.currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+
     this.currentTrackIndex = prevIdx;
     if (this.audio) {
       this.audio.src = PLAYLIST[prevIdx].src;
