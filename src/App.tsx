@@ -748,6 +748,8 @@ export default function KeyboardLandingPage() {
         onClose={() => setIsThemeSidebarOpen(false)}
         currentTheme={currentTheme}
         onSelectTheme={(theme) => setCurrentTheme(theme)}
+        currentPage={currentPage}
+        onNavigate={(page) => setCurrentPage(page)}
         colorZones={colorZones}
         onToggleColorZones={() => setColorZones((prev) => !prev)}
       />
