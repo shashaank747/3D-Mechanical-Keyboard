@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Keyboard from "@/components/ui/keyboard";
 import { ThemeSidebar } from "@/components/ui/ThemeSidebar";
-import { GlowingSmokeBackground } from "@/components/ui/GlowingSmokeBackground";
+import { MotionBackground } from "@/components/ui/MotionBackground";
 import { ParallaxFloatingElements } from "@/components/ui/ParallaxFloatingElements";
 import { SwitchShowcase } from "@/components/ui/SwitchShowcase";
 import { ExplodedKeyboardScroll } from "@/components/ui/ExplodedKeyboardScroll";
@@ -131,8 +131,8 @@ export default function KeyboardLandingPage() {
     <div
       className={`min-h-screen ${currentTheme.appBg} ${currentTheme.appText} flex flex-col items-center justify-start selection:bg-orange-500 selection:text-white relative overflow-x-clip transition-colors duration-300`}
     >
-      {/* Dynamic Glowing Smoke Background Effect (Shared Across All Pages) */}
-      <GlowingSmokeBackground theme={currentTheme} />
+      {/* Dynamic Cybernetic Aurora & Constellation Motion Background (Shared Across All Pages) */}
+      <MotionBackground theme={currentTheme} />
 
       {/* Floating 3D Parallax Keycap Elements (Home Hero Page Only) */}
       {currentPage === "home" && <ParallaxFloatingElements />}
