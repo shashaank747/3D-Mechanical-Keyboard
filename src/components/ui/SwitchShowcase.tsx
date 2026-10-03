@@ -110,22 +110,24 @@ export function SwitchShowcase({
                   <div
                     key={g.name}
                     className={`p-2.5 rounded-2xl border flex flex-col gap-1 transition-all ${
-                      isDark ? "bg-slate-950/70 border-slate-800" : "bg-slate-50 border-slate-200"
+                      isDark ? "bg-slate-950/70 border-slate-800 text-white" : "bg-white border-slate-200/90 text-slate-900 shadow-2xs"
                     }`}
                   >
                     <div className="flex items-center gap-1.5">
-                      <IconComponent className="w-3.5 h-3.5 text-orange-500" />
-                      <span className="text-xs font-extrabold truncate">{g.name}</span>
+                      <IconComponent className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                      <span className={`text-xs font-extrabold truncate ${isDark ? "text-white" : "text-slate-900"}`}>{g.name}</span>
                     </div>
-                    <span className="text-[10px] font-mono text-slate-400 truncate">{g.tag}</span>
+                    <span className={`text-[10px] font-mono truncate ${isDark ? "text-slate-400" : "text-slate-500 font-medium"}`}>{g.tag}</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 relative z-10">
-            <span className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+          <div className={`mt-6 pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3 relative z-10 ${
+            isDark ? "border-slate-800" : "border-slate-200"
+          }`}>
+            <span className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-600"}`}>
               Unlocked upon login with real-time score saving
             </span>
             <button
@@ -145,8 +147,8 @@ export function SwitchShowcase({
           whileHover={{ y: -4, transition: { duration: 0.2 } }}
           className={`md:col-span-4 rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-xl transition-all relative overflow-hidden ${
             isDark
-              ? "bg-slate-900/85 border-slate-800 hover:border-violet-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]"
-              : "bg-white/90 border-slate-200/90 hover:border-violet-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.08)]"
+              ? "bg-slate-900/85 border-slate-800 hover:border-violet-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)] text-white"
+              : "bg-white/95 border-slate-200 hover:border-violet-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.06)] text-slate-900"
           }`}
         >
           <div className="flex flex-col gap-4">
@@ -154,7 +156,9 @@ export function SwitchShowcase({
               <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-lg shadow-violet-500/20">
                 <Palette className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/30">
+              <span className={`text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full border ${
+                isDark ? "bg-violet-500/15 text-violet-400 border-violet-500/30" : "bg-violet-100 text-violet-700 border-violet-300"
+              }`}>
                 20+ Palettes
               </span>
             </div>
@@ -163,7 +167,7 @@ export function SwitchShowcase({
               <h3 className="text-lg font-black tracking-tight mb-1">
                 Theme Studio
               </h3>
-              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600 font-medium"}`}>
                 Instant 1-click preview of curated 3D keycap palettes with custom modifier color zoning.
               </p>
             </div>
@@ -188,10 +192,14 @@ export function SwitchShowcase({
             </div>
           </div>
 
-          <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <div className={`mt-5 pt-3 border-t ${isDark ? "border-slate-800" : "border-slate-200"}`}>
             <button
               onClick={onOpenThemes}
-              className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                isDark
+                  ? "border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400"
+                  : "border-violet-300 bg-violet-50 hover:bg-violet-100 text-violet-700 shadow-2xs"
+              }`}
             >
               <span>Open Theme Palette</span>
               <Palette className="w-3.5 h-3.5" />
@@ -206,8 +214,8 @@ export function SwitchShowcase({
           whileHover={{ y: -4, transition: { duration: 0.2 } }}
           className={`md:col-span-4 rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-xl transition-all ${
             isDark
-              ? "bg-slate-900/85 border-slate-800 hover:border-cyan-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]"
-              : "bg-white/90 border-slate-200/90 hover:border-cyan-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.08)]"
+              ? "bg-slate-900/85 border-slate-800 hover:border-cyan-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)] text-white"
+              : "bg-white/95 border-slate-200 hover:border-cyan-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.06)] text-slate-900"
           }`}
         >
           <div className="flex flex-col gap-4">
@@ -215,7 +223,9 @@ export function SwitchShowcase({
               <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/20">
                 <Layers className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+              <span className={`text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full border ${
+                isDark ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30" : "bg-cyan-100 text-cyan-700 border-cyan-300"
+              }`}>
                 Interactive 3D
               </span>
             </div>
@@ -224,22 +234,24 @@ export function SwitchShowcase({
               <h3 className="text-lg font-black tracking-tight mb-1">
                 Exploded 3D Assembly
               </h3>
-              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600 font-medium"}`}>
                 Scroll-driven mechanical disassembly, 68-key compact ANSI layout, tactile keypress physics, and live hotkey tracker HUD.
               </p>
             </div>
 
             <div className={`p-2.5 rounded-2xl border text-[11px] font-mono flex items-center justify-between ${
-              isDark ? "bg-slate-950/70 border-slate-800 text-cyan-400" : "bg-slate-100 border-slate-200 text-cyan-600"
+              isDark ? "bg-slate-950/70 border-slate-800 text-cyan-400" : "bg-cyan-50 border-cyan-200 text-cyan-800 font-semibold"
             }`}>
               <span>68-Key Compact ANSI</span>
               <span>100% Responsive</span>
             </div>
           </div>
 
-          <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+          <div className={`mt-5 pt-3 border-t flex items-center justify-between text-xs font-bold ${
+            isDark ? "border-slate-800 text-cyan-400" : "border-slate-200 text-cyan-600"
+          }`}>
             <span>Live Keystroke Lighting</span>
-            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+            <Zap className="w-3.5 h-3.5" />
           </div>
         </motion.div>
 
@@ -274,23 +286,25 @@ export function SwitchShowcase({
             </div>
 
             <div className="flex flex-col gap-1.5 text-[11px]">
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <div className={`flex items-center gap-1.5 ${isDark ? "text-slate-300" : "text-slate-700 font-semibold"}`}>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                 <span className="truncate">PBKDF2-SHA512 Cryptographic Salt</span>
               </div>
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <div className={`flex items-center gap-1.5 ${isDark ? "text-slate-300" : "text-slate-700 font-semibold"}`}>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                 <span className="truncate">Multi-Game Progress Retention</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-emerald-400 font-bold">
+          <div className={`mt-5 pt-3 border-t flex items-center justify-between text-xs font-bold ${
+            isDark ? "border-slate-800 text-emerald-400" : "border-slate-200 text-emerald-600"
+          }`}>
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Real-Time Cloud Connected</span>
             </span>
-            <Database className="w-3.5 h-3.5 text-emerald-400" />
+            <Database className="w-3.5 h-3.5" />
           </div>
         </motion.div>
 
@@ -301,8 +315,8 @@ export function SwitchShowcase({
           whileHover={{ y: -4, transition: { duration: 0.2 } }}
           className={`md:col-span-4 rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-xl transition-all ${
             isDark
-              ? "bg-slate-900/85 border-slate-800 hover:border-amber-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]"
-              : "bg-white/90 border-slate-200/90 hover:border-amber-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.08)]"
+              ? "bg-slate-900/85 border-slate-800 hover:border-amber-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)] text-white"
+              : "bg-white/95 border-slate-200 hover:border-amber-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.06)] text-slate-900"
           }`}
         >
           <div className="flex flex-col gap-4">
@@ -310,7 +324,9 @@ export function SwitchShowcase({
               <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/20">
                 <Headphones className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30">
+              <span className={`text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full border ${
+                isDark ? "bg-amber-500/15 text-amber-400 border-amber-500/30" : "bg-amber-100 text-amber-700 border-amber-300"
+              }`}>
                 5 Lo-Fi Tracks
               </span>
             </div>
@@ -319,22 +335,32 @@ export function SwitchShowcase({
               <h3 className="text-lg font-black tracking-tight mb-1">
                 Ambient Focus Soundtrack
               </h3>
-              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600 font-medium"}`}>
                 Relaxing ambient lo-fi tracks in a smart shuffle queue that plays every song before reshuffling.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-1.5 text-[10px] font-mono text-slate-400">
-              <span className="px-2 py-0.5 rounded-md bg-slate-800/40 border border-slate-700/50">Sunlight</span>
-              <span className="px-2 py-0.5 rounded-md bg-slate-800/40 border border-slate-700/50">Steaming Mug</span>
-              <span className="px-2 py-0.5 rounded-md bg-slate-800/40 border border-slate-700/50">Afternoon</span>
-              <span className="px-2 py-0.5 rounded-md bg-slate-800/40 border border-slate-700/50">Last Keystroke</span>
+            <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
+              {["Sunlight", "Steaming Mug", "Afternoon", "Last Keystroke"].map((track) => (
+                <span
+                  key={track}
+                  className={`px-2.5 py-1 rounded-lg border font-bold transition-colors ${
+                    isDark
+                      ? "bg-slate-800/80 border-slate-700/80 text-slate-200"
+                      : "bg-amber-50 border-amber-200/90 text-amber-900 shadow-2xs"
+                  }`}
+                >
+                  {track}
+                </span>
+              ))}
             </div>
           </div>
 
-          <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-amber-400 font-bold">
+          <div className={`mt-5 pt-3 border-t flex items-center justify-between text-xs font-bold ${
+            isDark ? "border-slate-800 text-amber-400" : "border-slate-200 text-amber-600"
+          }`}>
             <span>Zero-Repeat Smart Shuffle</span>
-            <Music className="w-3.5 h-3.5 text-amber-400" />
+            <Music className="w-3.5 h-3.5" />
           </div>
         </motion.div>
 
