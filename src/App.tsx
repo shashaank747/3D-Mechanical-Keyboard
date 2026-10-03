@@ -420,7 +420,7 @@ export default function KeyboardLandingPage() {
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wide">
-                          Supabase Synced • Active
+                          Cloud Synced • Active
                         </span>
                       </div>
                     </div>

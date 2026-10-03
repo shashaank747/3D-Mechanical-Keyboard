@@ -272,7 +272,7 @@ export function SwitchShowcase({
                 <Database className="w-5 h-5" />
               </div>
               <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                Supabase Live
+                Cloud Live
               </span>
             </div>
 
