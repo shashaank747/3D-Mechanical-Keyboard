@@ -14,8 +14,8 @@ interface ThemeSidebarProps {
   onClose: () => void;
   currentTheme: KeyboardTheme;
   onSelectTheme: (theme: KeyboardTheme) => void;
-  currentPage?: "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts";
-  onNavigate?: (page: "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts") => void;
+  currentPage?: "home" | "start" | "academy" | "codesprint" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts";
+  onNavigate?: (page: "home" | "start" | "academy" | "codesprint" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts") => void;
   colorZones?: boolean;
   onToggleColorZones?: () => void;
 }

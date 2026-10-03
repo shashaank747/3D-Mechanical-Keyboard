@@ -25,6 +25,7 @@ import {
   Unlock,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { updateStudentProgress } from "@/lib/db";
 
 export interface GameStep {
   code: string;
@@ -1003,6 +1004,16 @@ export function KeyboardGame({
         maxStreak: finalMaxStreak,
       },
     }));
+
+    // Update database & table analytics
+    updateStudentProgress({
+      gameType: "academy",
+      details: {
+        levelId: activeLevel.id,
+        accuracy: finalAccuracy,
+        maxStreak: finalMaxStreak,
+      },
+    });
 
     // Unlock next level upon completing this one!
     if (currentLevelIndex + 1 < GAME_LEVELS.length) {

@@ -20,6 +20,7 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { updateStudentProgress } from "@/lib/db";
 
 export interface BlindPhraseItem {
   id: number;
@@ -380,6 +381,12 @@ export function BlindTypingGame({
         setLineFailCount(0);
         soundEngine.playKeySound("Enter");
         speakVoiceRemark("Perfect match! Well done.");
+
+        // Record progress
+        updateStudentProgress({
+          gameType: "blindTyping",
+          details: { lines: 1 },
+        });
       } else {
         // Increment fail counter for this specific line
         const newFailCount = lineFailCount + 1;

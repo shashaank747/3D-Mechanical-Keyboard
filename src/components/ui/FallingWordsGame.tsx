@@ -18,6 +18,7 @@ import {
   Crosshair,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { updateStudentProgress } from "@/lib/db";
 
 interface FallingWord {
   id: string;
@@ -124,6 +125,10 @@ export function FallingWordsGame({
             const nextL = l - 1;
             if (nextL <= 0) {
               setGameState("gameover");
+              updateStudentProgress({
+                gameType: "meteorDefense",
+                details: { score, wave },
+              });
             }
             return Math.max(0, nextL);
           });

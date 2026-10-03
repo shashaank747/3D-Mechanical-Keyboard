@@ -1,0 +1,100 @@
+[
+  {
+    "userId": "USR-ADMIN01",
+    "username": "admin",
+    "email": "admin@keyboard.io",
+    "password": "pbkdf2$6dd34b7ebf3f38e0f3645c0768597dee$ecff072f2e55c572fc6a386d69084ebd9ead647c222065124e1fa2ce78e168b466bdb6b72a562f0d81a95729b56de524070e04a098519dd161b919c72a447844",
+    "ipAddress": "::1",
+    "createdAt": "2026-10-03T10:00:00.000Z",
+    "lastLoginAt": "2026-10-03T07:05:34.890Z",
+    "progress": {
+      "codeSprint": {
+        "completedLevels": {},
+        "totalSolved": 0,
+        "languagesPracticed": [],
+        "bestWpm": 0
+      },
+      "academy": {
+        "completedLevels": [],
+        "highestLevel": 0,
+        "avgAccuracy": 0
+      },
+      "speedTest": {
+        "testsTaken": 0,
+        "bestWpm": 0,
+        "avgAccuracy": 0
+      },
+      "meteorDefense": {
+        "highScore": 0,
+        "highestWave": 0
+      },
+      "blindTyping": {
+        "completedLines": 0,
+        "accuracy": 0
+      },
+      "shortcutsDojo": {
+        "shortcutsMastered": 0
+      },
+      "summary": {
+        "totalGamesPlayed": 0,
+        "totalLevelsMastered": 0,
+        "lastActiveGame": "None",
+        "lastActivityTime": "2026-10-03T06:57:56.819Z"
+      }
+    }
+  },
+  {
+    "userId": "USR-UMDZTBXW",
+    "username": "Chhotu Monster",
+    "email": "cm@gmail.com",
+    "password": "pbkdf2$ee148e5a91ac1838c8a720b97c4f09aa$405878a9631309c3b508cb75438f6f4056caa67b990494cf774227f53c812cd1b257231a30452c39c38d89cd0c935db4bf4a0ffe762678c3c6223ddb31ebaab4",
+    "ipAddress": "::1",
+    "createdAt": "2026-10-03T06:37:55.436Z",
+    "lastLoginAt": "2026-10-03T07:05:34.871Z",
+    "progress": {
+      "codeSprint": {
+        "completedLevels": {
+          "python_1": {
+            "completedAt": "2026-10-03T07:00:42.595Z",
+            "wpm": 48,
+            "timeSecs": 12
+          }
+        },
+        "totalSolved": 1,
+        "languagesPracticed": [
+          "python"
+        ],
+        "bestWpm": 48
+      },
+      "academy": {
+        "completedLevels": [
+          1
+        ],
+        "highestLevel": 1,
+        "avgAccuracy": 0
+      },
+      "speedTest": {
+        "testsTaken": 1,
+        "bestWpm": 62,
+        "avgAccuracy": 96
+      },
+      "meteorDefense": {
+        "highScore": 0,
+        "highestWave": 0
+      },
+      "blindTyping": {
+        "completedLines": 0,
+        "accuracy": 0
+      },
+      "shortcutsDojo": {
+        "shortcutsMastered": 0
+      },
+      "summary": {
+        "totalGamesPlayed": 3,
+        "totalLevelsMastered": 2,
+        "lastActiveGame": "Speed Arena (62 WPM)",
+        "lastActivityTime": "2026-10-03T07:01:12.187Z"
+      }
+    }
+  }
+]

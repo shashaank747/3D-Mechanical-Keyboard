@@ -16,9 +16,10 @@ import {
   ShieldCheck,
   CheckCircle2,
   Lock,
+  Code2,
 } from "lucide-react";
 
-export type GameId = "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts";
+export type GameId = "academy" | "codesprint" | "blindtyping" | "speedtest" | "fallingwords" | "soundmatrix" | "shortcuts";
 
 export interface GameCardInfo {
   id: GameId;
@@ -36,6 +37,18 @@ export interface GameCardInfo {
 }
 
 const ARCADE_GAMES: GameCardInfo[] = [
+  {
+    id: "codesprint",
+    title: "Code Sprint & Dev Syntax",
+    tagline: "Dual-Compiler Logic & Code Typing Dojo",
+    category: "Coding & Logic",
+    description: "Dual-pane IDE compiler with problem templates, missing logical blanks, smart auto-indentation, and multi-language challenges across Python, JS, Java, C, C++, HTML, CSS & SQL.",
+    icon: Code2,
+    badgeColor: "bg-amber-500 text-white",
+    gradient: "from-amber-500/20 via-orange-500/10 to-transparent",
+    metrics: ["8 Languages", "Dual Compiler IDE", "Code Template Blanks", "Real Auto-Indent"],
+    buttonText: "START CODE SPRINT",
+  },
   {
     id: "academy",
     title: "Touch Typing Academy",
@@ -147,7 +160,7 @@ export function GamesHub({
           <div className="flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Available Modes</span>
             <span className="text-sm font-black font-mono text-orange-500">
-              5 Interactive Games
+              7 Interactive Games
             </span>
           </div>
         </div>

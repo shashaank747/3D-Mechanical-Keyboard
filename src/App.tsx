@@ -13,19 +13,22 @@ import { GamesHub } from "@/components/ui/GamesHub";
 import { FallingWordsGame } from "@/components/ui/FallingWordsGame";
 import { SoundMatrixGame } from "@/components/ui/SoundMatrixGame";
 import { BlindTypingGame } from "@/components/ui/BlindTypingGame";
+import { CodeSprintGame } from "@/components/ui/CodeSprintGame";
 import { KEYBOARD_THEMES, type KeyboardTheme } from "@/lib/themes";
+import { registerUser, loginUser, updateStudentProgress, type UserRecord } from "@/lib/db";
 import { 
   Keyboard as KeyboardIcon, Sparkles, 
   Check, RotateCcw, Flame, Palette,
   Play, ArrowLeft, ArrowDown, BookOpen, Layers, Menu,
-  Volume2, Gamepad2, ShieldCheck, LogIn, User, X, AlertTriangle, UserPlus
+  Volume2, Gamepad2, ShieldCheck, LogIn, User, X, AlertTriangle, UserPlus,
+  Eye, EyeOff
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { MusicPlayer } from "@/components/ui/MusicPlayer";
 import { bgMusic } from "@/lib/bgMusic";
 import { soundEngine } from "@/lib/sound";
 
-export type AppPage = "home" | "start" | "academy" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts";
+export type AppPage = "home" | "start" | "academy" | "codesprint" | "speedtest" | "fallingwords" | "soundmatrix" | "blindtyping" | "shortcuts";
 
 export default function KeyboardLandingPage() {
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
@@ -35,6 +38,8 @@ export default function KeyboardLandingPage() {
   // Authentication & Arcade Access Gating
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("setu_active_user") || null;
@@ -206,6 +211,12 @@ export default function KeyboardLandingPage() {
       const wordCount = targetPhrase.split(" ").length;
       const calculatedWpm = Math.round(wordCount / (durationMin || 0.01));
       setWpm(calculatedWpm);
+
+      // Record to database table report
+      updateStudentProgress({
+        gameType: "speedTest",
+        details: { wpm: calculatedWpm, accuracy: acc },
+      });
 
       try {
         confetti({
@@ -507,6 +518,16 @@ export default function KeyboardLandingPage() {
         <GamesHub
           theme={currentTheme}
           onSelectGame={(gameId) => setCurrentPage(gameId as AppPage)}
+        />
+      )}
+
+      {/* ============================================================ */}
+      {/* GAME: CODE SPRINT & DEV SYNTAX (DUAL-PANE COMPILER & TYPING) */}
+      {/* ============================================================ */}
+      {currentPage === "codesprint" && (
+        <CodeSprintGame
+          theme={currentTheme}
+          onBackToHub={() => setCurrentPage("start")}
         />
       )}
 
@@ -966,19 +987,27 @@ export default function KeyboardLandingPage() {
               {/* Form Input Row (Full-width grid) */}
               {authMode === "signin" ? (
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
-                    if (loginEmail.trim()) {
-                      const user = loginEmail.split("@")[0];
-                      setLoggedInUser(user);
-                      if (typeof window !== "undefined") {
-                        localStorage.setItem("setu_active_user", user);
-                      }
-                      setIsLoginModalOpen(false);
+                    if (loginEmail.trim() && loginPassword) {
                       setLoginWarningMessage(null);
-                      setLoginEmail("");
-                      setLoginPassword("");
-                      confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
+                      const res = await loginUser({
+                        loginIdentifier: loginEmail,
+                        password: loginPassword,
+                      });
+                      if (res.success && res.user) {
+                        setLoggedInUser(res.user.username);
+                        if (typeof window !== "undefined") {
+                          localStorage.setItem("setu_active_user", res.user.username);
+                        }
+                        setIsLoginModalOpen(false);
+                        setLoginWarningMessage(null);
+                        setLoginEmail("");
+                        setLoginPassword("");
+                        confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
+                      } else {
+                        setLoginWarningMessage(res.error || "Login failed. Please check your credentials.");
+                      }
                     }
                   }}
                   className="flex flex-col gap-4"
@@ -1004,18 +1033,28 @@ export default function KeyboardLandingPage() {
                     {/* Password Input */}
                     <div className="sm:col-span-4 flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
-                          isDark
-                            ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
-                            : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
-                        }`}
-                      />
+                      <div className="relative">
+                        <input
+                          type={showLoginPassword ? "text" : "password"}
+                          required
+                          placeholder="••••••••"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          className={`w-full pl-4 pr-11 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
+                            isDark
+                              ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                              : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowLoginPassword((prev) => !prev)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-orange-500 transition-colors cursor-pointer"
+                          title={showLoginPassword ? "Hide password" : "Show password"}
+                        >
+                          {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Submit Button */}
@@ -1032,20 +1071,29 @@ export default function KeyboardLandingPage() {
                 </form>
               ) : (
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
-                    if (signupName.trim() || signupEmail.trim()) {
-                      const user = signupName.trim() || signupEmail.split("@")[0];
-                      setLoggedInUser(user);
-                      if (typeof window !== "undefined") {
-                        localStorage.setItem("setu_active_user", user);
-                      }
-                      setIsLoginModalOpen(false);
+                    if (signupName.trim() && signupPassword) {
                       setLoginWarningMessage(null);
-                      setSignupName("");
-                      setSignupEmail("");
-                      setSignupPassword("");
-                      confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
+                      const res = await registerUser({
+                        username: signupName,
+                        email: signupEmail || `${signupName.toLowerCase().replace(/\s+/g, '')}@example.com`,
+                        password: signupPassword,
+                      });
+                      if (res.success && res.user) {
+                        setLoggedInUser(res.user.username);
+                        if (typeof window !== "undefined") {
+                          localStorage.setItem("setu_active_user", res.user.username);
+                        }
+                        setIsLoginModalOpen(false);
+                        setLoginWarningMessage(null);
+                        setSignupName("");
+                        setSignupEmail("");
+                        setSignupPassword("");
+                        confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
+                      } else {
+                        setLoginWarningMessage(res.error || "Registration failed. Username/Email may already be registered.");
+                      }
                     }
                   }}
                   className="flex flex-col gap-4"
@@ -1073,8 +1121,7 @@ export default function KeyboardLandingPage() {
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
                       <input
                         type="text"
-                        required
-                        placeholder="example@gmail.com"
+                        placeholder="example@gmail.com (optional)"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
                         className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
@@ -1088,18 +1135,28 @@ export default function KeyboardLandingPage() {
                     {/* Password */}
                     <div className="sm:col-span-2 flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
-                          isDark
-                            ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
-                            : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
-                        }`}
-                      />
+                      <div className="relative">
+                        <input
+                          type={showSignupPassword ? "text" : "password"}
+                          required
+                          placeholder="••••••••"
+                          value={signupPassword}
+                          onChange={(e) => setSignupPassword(e.target.value)}
+                          className={`w-full pl-4 pr-11 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
+                            isDark
+                              ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                              : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSignupPassword((prev) => !prev)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-orange-500 transition-colors cursor-pointer"
+                          title={showSignupPassword ? "Hide password" : "Show password"}
+                        >
+                          {showSignupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Create Button */}
@@ -1125,7 +1182,7 @@ export default function KeyboardLandingPage() {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Gamepad2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Unlocks All 5 Arcade Games</span>
+                    <span>Unlocks All 7 Arcade Games</span>
                   </span>
                   <span className="flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
