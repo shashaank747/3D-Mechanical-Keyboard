@@ -404,6 +404,29 @@ export async function loginUser(params: {
   }
 }
 
+// VALIDATE ACTIVE USER SESSION (CHECKS SUPABASE)
+export async function validateUserExists(username: string): Promise<boolean> {
+  if (!username) return false;
+  const target = username.trim().toLowerCase();
+
+  try {
+    const { data: supaUser, error } = await supabase
+      .from("students")
+      .select("id, username, email")
+      .or(`username.ilike.${target},email.ilike.${target}`)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("[Session Validation Error]:", error);
+      return true; // Keep session if network/offline error
+    }
+
+    return Boolean(supaUser);
+  } catch {
+    return true; // Network offline fallback
+  }
+}
+
 // RESET PASSWORD (SUPABASE + SERVER + LOCAL)
 export async function resetPassword(params: {
   loginIdentifier: string;

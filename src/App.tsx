@@ -15,7 +15,7 @@ import { SoundMatrixGame } from "@/components/ui/SoundMatrixGame";
 import { BlindTypingGame } from "@/components/ui/BlindTypingGame";
 import { CodeSprintGame } from "@/components/ui/CodeSprintGame";
 import { KEYBOARD_THEMES, type KeyboardTheme } from "@/lib/themes";
-import { registerUser, loginUser, resetPassword, updateStudentProgress, type UserRecord } from "@/lib/db";
+import { registerUser, loginUser, resetPassword, validateUserExists, updateStudentProgress, type UserRecord } from "@/lib/db";
 import { 
   Keyboard as KeyboardIcon, Sparkles, 
   Check, RotateCcw, Flame, Palette,
@@ -64,6 +64,21 @@ export default function KeyboardLandingPage() {
   const [testedKeys, setTestedKeys] = useState<Set<string>>(new Set());
   const [lastTriggeredKey, setLastTriggeredKey] = useState<{ key: string; code: string; time: number } | null>(null);
   const [totalKeyHits, setTotalKeyHits] = useState<number>(0);
+
+  // Validate active session against Supabase on startup / mount
+  useEffect(() => {
+    if (loggedInUser) {
+      validateUserExists(loggedInUser).then((exists) => {
+        if (!exists) {
+          console.warn("[Session] Active user was removed from Supabase. Resetting session.");
+          setLoggedInUser(null);
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("setu_active_user");
+          }
+        }
+      });
+    }
+  }, [loggedInUser]);
 
   // Close User Menu on click outside
   useEffect(() => {
