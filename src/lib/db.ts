@@ -197,8 +197,8 @@ export async function registerUser(params: {
         };
       }
 
-      // Insert into Supabase
-      await supabase.from("students").insert({
+      // Insert directly into Supabase
+      const { error: insertErr } = await supabase.from("students").insert({
         user_id: userId,
         username: payload.username,
         email: payload.email,
@@ -209,8 +209,14 @@ export async function registerUser(params: {
         last_active_game: "Registered",
         progress_json: defaultProgress,
       });
-    } catch {
-      // Supabase offline/fallback
+
+      if (insertErr) {
+        console.error("[Supabase Error] Registration insert failed:", insertErr);
+      } else {
+        console.log("[Supabase Sync] Successfully registered student in Supabase Cloud:", payload.username);
+      }
+    } catch (supaErr) {
+      console.warn("[Supabase Warning] Could not reach Supabase:", supaErr);
     }
 
     // 2. Try server API / local DB sync
@@ -369,6 +375,25 @@ export async function loginUser(params: {
     user.ipAddress = ipAddress;
     user.lastLoginAt = new Date().toISOString();
     saveLocalUsers(users);
+
+    // 4. Auto-sync to Supabase Cloud if not yet present
+    try {
+      await supabase.from("students").upsert({
+        user_id: user.userId,
+        username: user.username,
+        email: user.email,
+        password_hash: user.password,
+        ip_address: ipAddress,
+        total_games_played: user.progress.summary.totalGamesPlayed || 0,
+        total_levels_mastered: user.progress.summary.totalLevelsMastered || 0,
+        last_active_game: user.progress.summary.lastActiveGame || "None",
+        progress_json: user.progress,
+        last_login_at: user.lastLoginAt,
+      }, { onConflict: "user_id" });
+      console.log("[Supabase Sync] Synced student to Supabase Cloud on login:", user.username);
+    } catch (supaErr) {
+      console.warn("[Supabase Warning] Could not sync user to Supabase on login:", supaErr);
+    }
 
     return { success: true, user };
   } catch (err: unknown) {
