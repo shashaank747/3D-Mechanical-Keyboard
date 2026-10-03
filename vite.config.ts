@@ -84,6 +84,12 @@ interface UserRecord {
   createdAt: string;
   lastLoginAt: string;
   progress?: StudentProgress;
+  themeId?: string;
+  colorZones?: boolean;
+  preferences?: {
+    themeId: string;
+    colorZones: boolean;
+  };
 }
 
 function getDefaultProgress(): StudentProgress {
@@ -614,6 +620,21 @@ function userDatabasePlugin(): Plugin {
           u.password = hashPassword(u.password);
           mutated = true;
         }
+        if (!u.themeId) {
+          u.themeId = 'studio-light';
+          mutated = true;
+        }
+        if (u.colorZones === undefined) {
+          u.colorZones = false;
+          mutated = true;
+        }
+        if (!u.preferences) {
+          u.preferences = {
+            themeId: u.themeId,
+            colorZones: u.colorZones,
+          };
+          mutated = true;
+        }
       });
       if (mutated) {
         fs.writeFileSync(dbFile, JSON.stringify(users, null, 2), 'utf-8');
@@ -954,6 +975,52 @@ function userDatabasePlugin(): Plugin {
 
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ success: true, progress: user.progress }));
+            } catch (err: unknown) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: false, error: (err as Error).message }));
+            }
+          });
+          return;
+        }
+
+        // 5. POST /api/theme (Save theme / palette preference)
+        if (req.method === 'POST' && url === '/api/theme') {
+          let body = '';
+          req.on('data', (chunk) => {
+            body += chunk;
+          });
+          req.on('end', () => {
+            try {
+              const data = JSON.parse(body);
+              const users = ensureDb();
+              const username = (data.username || '').trim().toLowerCase();
+
+              const user = users.find(
+                (u) =>
+                  u.username.toLowerCase() === username ||
+                  u.email.toLowerCase() === username ||
+                  u.userId.toLowerCase() === username
+              );
+
+              if (!user) {
+                res.statusCode = 404;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ success: false, error: 'User not found' }));
+                return;
+              }
+
+              user.themeId = data.themeId || 'studio-light';
+              user.colorZones = Boolean(data.colorZones);
+              user.preferences = {
+                themeId: user.themeId,
+                colorZones: user.colorZones,
+              };
+
+              saveDb(users);
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true, themeId: user.themeId, colorZones: user.colorZones }));
             } catch (err: unknown) {
               res.statusCode = 500;
               res.setHeader('Content-Type', 'application/json');

@@ -15,7 +15,7 @@ import { SoundMatrixGame } from "@/components/ui/SoundMatrixGame";
 import { BlindTypingGame } from "@/components/ui/BlindTypingGame";
 import { CodeSprintGame } from "@/components/ui/CodeSprintGame";
 import { KEYBOARD_THEMES, type KeyboardTheme } from "@/lib/themes";
-import { registerUser, loginUser, resetPassword, validateUserExists, updateStudentProgress, type UserRecord } from "@/lib/db";
+import { registerUser, loginUser, resetPassword, validateUserExists, updateStudentProgress, updateUserTheme, getUserPreferences, type UserRecord } from "@/lib/db";
 import { 
   Keyboard as KeyboardIcon, Sparkles, 
   Check, RotateCcw, Flame, Palette,
@@ -65,7 +65,7 @@ export default function KeyboardLandingPage() {
   const [lastTriggeredKey, setLastTriggeredKey] = useState<{ key: string; code: string; time: number } | null>(null);
   const [totalKeyHits, setTotalKeyHits] = useState<number>(0);
 
-  // Validate active session against Supabase on startup / mount
+  // Validate active session against Supabase on startup / mount & restore user's saved theme
   useEffect(() => {
     if (loggedInUser) {
       validateUserExists(loggedInUser).then((exists) => {
@@ -75,6 +75,15 @@ export default function KeyboardLandingPage() {
           if (typeof window !== "undefined") {
             localStorage.removeItem("setu_active_user");
           }
+        }
+      });
+
+      // Restore user's saved keyboard theme & color zones from database
+      getUserPreferences(loggedInUser).then((prefs) => {
+        if (prefs) {
+          const matched = KEYBOARD_THEMES.find((t) => t.id === prefs.themeId);
+          if (matched) setCurrentTheme(matched);
+          setColorZones(Boolean(prefs.colorZones));
         }
       });
     }
@@ -953,7 +962,14 @@ export default function KeyboardLandingPage() {
         isOpen={isThemeSidebarOpen}
         onClose={() => setIsThemeSidebarOpen(false)}
         currentTheme={currentTheme}
-        onSelectTheme={(theme) => setCurrentTheme(theme)}
+        onSelectTheme={(theme) => {
+          setCurrentTheme(theme);
+          updateUserTheme({
+            username: loggedInUser || undefined,
+            themeId: theme.id,
+            colorZones,
+          });
+        }}
         currentPage={currentPage}
         onNavigate={(page) => {
           if (page === "home") {
@@ -963,7 +979,15 @@ export default function KeyboardLandingPage() {
           }
         }}
         colorZones={colorZones}
-        onToggleColorZones={() => setColorZones((prev) => !prev)}
+        onToggleColorZones={() => {
+          const nextZones = !colorZones;
+          setColorZones(nextZones);
+          updateUserTheme({
+            username: loggedInUser || undefined,
+            themeId: currentTheme.id,
+            colorZones: nextZones,
+          });
+        }}
       />
 
       {/* ============================================================ */}
@@ -1121,6 +1145,13 @@ export default function KeyboardLandingPage() {
                         if (typeof window !== "undefined") {
                           localStorage.setItem("setu_active_user", res.user.username);
                         }
+                        if (res.user.themeId) {
+                          const matched = KEYBOARD_THEMES.find((t) => t.id === res.user?.themeId);
+                          if (matched) setCurrentTheme(matched);
+                        }
+                        if (res.user.colorZones !== undefined) {
+                          setColorZones(Boolean(res.user.colorZones));
+                        }
                         setIsLoginModalOpen(false);
                         setLoginWarningMessage(null);
                         setLoginEmail("");
@@ -1219,6 +1250,13 @@ export default function KeyboardLandingPage() {
                         setLoggedInUser(res.user.username);
                         if (typeof window !== "undefined") {
                           localStorage.setItem("setu_active_user", res.user.username);
+                        }
+                        if (res.user.themeId) {
+                          const matched = KEYBOARD_THEMES.find((t) => t.id === res.user?.themeId);
+                          if (matched) setCurrentTheme(matched);
+                        }
+                        if (res.user.colorZones !== undefined) {
+                          setColorZones(Boolean(res.user.colorZones));
                         }
                         setIsLoginModalOpen(false);
                         setLoginWarningMessage(null);

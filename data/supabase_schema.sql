@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS public.students (
   email TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   ip_address TEXT DEFAULT '127.0.0.1',
+  theme_id TEXT DEFAULT 'studio-light',
+  color_zones BOOLEAN DEFAULT false,
+  preferences_json JSONB DEFAULT '{"themeId": "studio-light", "colorZones": false}'::jsonb,
   total_games_played INT DEFAULT 0,
   total_levels_mastered INT DEFAULT 0,
   code_sprint_solved INT DEFAULT 0,
@@ -31,7 +34,12 @@ CREATE TABLE IF NOT EXISTS public.students (
   last_activity_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Grant full access so Vercel live users can save progress and sign in
+-- Ensure columns exist if table was already created
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS theme_id TEXT DEFAULT 'studio-light';
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS color_zones BOOLEAN DEFAULT false;
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS preferences_json JSONB DEFAULT '{"themeId": "studio-light", "colorZones": false}'::jsonb;
+
+-- Grant full access so Vercel live users can save progress, themes, and sign in
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow all public operations on students" ON public.students;

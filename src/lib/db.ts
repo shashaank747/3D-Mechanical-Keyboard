@@ -37,6 +37,12 @@ export interface StudentProgress {
   };
 }
 
+export interface UserPreferences {
+  themeId: string;
+  colorZones: boolean;
+  lastUpdated?: string;
+}
+
 export interface UserRecord {
   userId: string;
   username: string;
@@ -46,6 +52,9 @@ export interface UserRecord {
   createdAt: string;
   lastLoginAt: string;
   progress: StudentProgress;
+  themeId?: string;
+  colorZones?: boolean;
+  preferences?: UserPreferences;
 }
 
 const LOCAL_STORAGE_KEY = "setu_users_database_v1";
@@ -204,6 +213,9 @@ export async function registerUser(params: {
         email: payload.email,
         password_hash: passwordHash,
         ip_address: ipAddress,
+        theme_id: "studio-light",
+        color_zones: false,
+        preferences_json: { themeId: "studio-light", colorZones: false },
         total_games_played: 0,
         total_levels_mastered: 0,
         last_active_game: "Registered",
@@ -224,7 +236,11 @@ export async function registerUser(params: {
       await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          themeId: "studio-light",
+          colorZones: false,
+        }),
       });
     } catch {
       // ignore
@@ -239,6 +255,13 @@ export async function registerUser(params: {
       createdAt: new Date().toISOString(),
       lastLoginAt: new Date().toISOString(),
       progress: defaultProgress,
+      themeId: "studio-light",
+      colorZones: false,
+      preferences: {
+        themeId: "studio-light",
+        colorZones: false,
+        lastUpdated: new Date().toISOString(),
+      },
     };
 
     // Save to LocalStorage fallback
@@ -289,6 +312,9 @@ export async function loginUser(params: {
           })
           .eq("user_id", supaUser.user_id);
 
+        const savedThemeId = supaUser.theme_id || supaUser.preferences_json?.themeId || "studio-light";
+        const savedColorZones = Boolean(supaUser.color_zones ?? supaUser.preferences_json?.colorZones ?? false);
+
         const user: UserRecord = {
           userId: supaUser.user_id,
           username: supaUser.username,
@@ -298,6 +324,12 @@ export async function loginUser(params: {
           createdAt: supaUser.created_at || new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
           progress: supaUser.progress_json || createDefaultProgress(),
+          themeId: savedThemeId,
+          colorZones: savedColorZones,
+          preferences: supaUser.preferences_json || {
+            themeId: savedThemeId,
+            colorZones: savedColorZones,
+          },
         };
 
         // Cache in local
@@ -370,6 +402,12 @@ export async function loginUser(params: {
     if (!user.progress) {
       user.progress = createDefaultProgress();
     }
+    if (!user.themeId) {
+      user.themeId = user.preferences?.themeId || "studio-light";
+    }
+    if (user.colorZones === undefined) {
+      user.colorZones = user.preferences?.colorZones || false;
+    }
 
     // Update IP & login time
     user.ipAddress = ipAddress;
@@ -382,8 +420,14 @@ export async function loginUser(params: {
         user_id: user.userId,
         username: user.username,
         email: user.email,
-        password_hash: user.password,
+        password: user.password,
         ip_address: ipAddress,
+        theme_id: user.themeId || "studio-light",
+        color_zones: user.colorZones ?? false,
+        preferences_json: user.preferences || {
+          themeId: user.themeId || "studio-light",
+          colorZones: user.colorZones ?? false,
+        },
         total_games_played: user.progress.summary.totalGamesPlayed || 0,
         total_levels_mastered: user.progress.summary.totalLevelsMastered || 0,
         last_active_game: user.progress.summary.lastActiveGame || "None",
@@ -625,4 +669,119 @@ export async function updateStudentProgress(params: {
       // ignore
     }
   }
+}
+
+// UPDATE USER THEME & PALETTE PREFERENCES (SUPABASE + SERVER + LOCAL)
+export async function updateUserTheme(params: {
+  username?: string;
+  themeId: string;
+  colorZones?: boolean;
+}): Promise<void> {
+  const activeUser = params.username || (typeof window !== "undefined" ? localStorage.getItem("setu_active_user") : null);
+  if (!activeUser) return;
+
+  const nowIso = new Date().toISOString();
+  const themeId = params.themeId;
+  const colorZones = Boolean(params.colorZones);
+
+  // 1. Send to local dev server API if available
+  try {
+    fetch("/api/theme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: activeUser,
+        themeId,
+        colorZones,
+        timestamp: nowIso,
+      }),
+    }).catch(() => {});
+  } catch {
+    // ignore
+  }
+
+  // 2. Update local storage record
+  const users = getLocalUsers();
+  const user = users.find(
+    (u) =>
+      u.username.toLowerCase() === activeUser.toLowerCase() ||
+      u.email.toLowerCase() === activeUser.toLowerCase()
+  );
+
+  if (user) {
+    user.themeId = themeId;
+    user.colorZones = colorZones;
+    user.preferences = {
+      themeId,
+      colorZones,
+      lastUpdated: nowIso,
+    };
+    saveLocalUsers(users);
+  }
+
+  // Cache user theme locally for instant warm boot
+  if (typeof window !== "undefined") {
+    localStorage.setItem(`setu_theme_${activeUser.toLowerCase()}`, themeId);
+    localStorage.setItem(`setu_colorzones_${activeUser.toLowerCase()}`, String(colorZones));
+  }
+
+  // 3. Sync to Supabase Cloud in Real-time
+  try {
+    await supabase
+      .from("students")
+      .update({
+        theme_id: themeId,
+        color_zones: colorZones,
+        preferences_json: {
+          themeId,
+          colorZones,
+          lastUpdated: nowIso,
+        },
+        last_activity_at: nowIso,
+      })
+      .or(`username.ilike.${activeUser},email.ilike.${activeUser}`);
+    console.log("[Supabase Sync] Synced theme & palette preference to Supabase Cloud for:", activeUser, { themeId, colorZones });
+  } catch (supaErr) {
+    console.warn("[Supabase Warning] Could not sync theme preference to Supabase:", supaErr);
+  }
+}
+
+// GET SAVED USER PREFERENCES (SUPABASE + LOCAL)
+export async function getUserPreferences(
+  username: string
+): Promise<{ themeId: string; colorZones: boolean } | null> {
+  if (!username) return null;
+  const target = username.trim().toLowerCase();
+
+  // Try Supabase first
+  try {
+    const { data: supaUser } = await supabase
+      .from("students")
+      .select("theme_id, color_zones, preferences_json")
+      .or(`username.ilike.${target},email.ilike.${target}`)
+      .maybeSingle();
+
+    if (supaUser) {
+      const themeId = supaUser.theme_id || supaUser.preferences_json?.themeId || "studio-light";
+      const colorZones = Boolean(supaUser.color_zones ?? supaUser.preferences_json?.colorZones ?? false);
+      return { themeId, colorZones };
+    }
+  } catch {
+    // fallback
+  }
+
+  // Try local users
+  const users = getLocalUsers();
+  const localUser = users.find(
+    (u) =>
+      u.username.toLowerCase() === target ||
+      u.email.toLowerCase() === target
+  );
+  if (localUser) {
+    const themeId = localUser.themeId || localUser.preferences?.themeId || "studio-light";
+    const colorZones = Boolean(localUser.colorZones ?? localUser.preferences?.colorZones ?? false);
+    return { themeId, colorZones };
+  }
+
+  return null;
 }
