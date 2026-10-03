@@ -415,7 +415,7 @@ export default function KeyboardLandingPage() {
 
             {/* Login Button / User Profile Dropdown Pill */}
             {loggedInUser ? (
-              <div className="relative" ref={userMenuRef}>
+              <div className="relative inline-flex items-center" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen((prev) => !prev)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all apple-glass-pill hover:scale-105 active:scale-95 cursor-pointer ${
@@ -430,39 +430,45 @@ export default function KeyboardLandingPage() {
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180 text-orange-500" : ""}`} />
                 </button>
 
-                {/* Dropdown Popover */}
-                {isUserMenuOpen && (
-                  <div
-                    className={`absolute right-0 mt-2.5 w-56 rounded-3xl border shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 apple-liquid-glass ${
-                      isDark ? "apple-liquid-glass-dark text-slate-200" : "apple-liquid-glass-light text-slate-800"
-                    }`}
-                  >
-                    <div className="px-3.5 py-2.5 border-b border-white/10 dark:border-white/5 mb-1.5">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Signed in as</p>
-                      <p className="text-sm font-black text-orange-500 truncate">{loggedInUser}</p>
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wide">
-                          Cloud Synced • Active
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        setLoggedInUser(null);
-                        if (typeof window !== "undefined") {
-                          localStorage.removeItem("setu_active_user");
-                        }
-                        setIsUserMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-red-500 hover:bg-red-500/10 active:scale-98 transition-all cursor-pointer text-left"
+                {/* Dropdown Popover Anchored BELOW the pill */}
+                <AnimatePresence>
+                  {isUserMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className={`absolute right-0 top-full mt-2 w-56 rounded-3xl border shadow-2xl p-2 z-50 apple-liquid-glass ${
+                        isDark ? "apple-liquid-glass-dark text-slate-200 bg-slate-900/95" : "apple-liquid-glass-light text-slate-800 bg-white/90"
+                      }`}
                     >
-                      <LogOut className="w-4 h-4 text-red-500" />
-                      <span>Log Out</span>
-                    </button>
-                  </div>
-                )}
+                      <div className="px-3.5 py-2.5 border-b border-black/5 dark:border-white/10 mb-1.5">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Signed in as</p>
+                        <p className="text-sm font-black text-orange-500 truncate">{loggedInUser}</p>
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wide">
+                            Cloud Synced • Active
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setLoggedInUser(null);
+                          if (typeof window !== "undefined") {
+                            localStorage.removeItem("setu_active_user");
+                          }
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-red-500 hover:bg-red-500/10 active:scale-98 transition-all cursor-pointer text-left"
+                      >
+                        <LogOut className="w-4 h-4 text-red-500" />
+                        <span>Log Out</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
               <button
