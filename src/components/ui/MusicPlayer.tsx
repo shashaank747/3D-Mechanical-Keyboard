@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { bgMusic } from "@/lib/bgMusic";
 import { Volume2, VolumeX } from "lucide-react";
@@ -15,6 +15,7 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
   const [volume, setVolume] = useState<number>(bgMusic.getVolume());
   const [currentTrack, setCurrentTrack] = useState(bgMusic.getCurrentTrack());
   const [showVolumeSlider, setShowVolumeSlider] = useState<boolean>(false);
+  const volumeContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const unsubscribe = bgMusic.subscribe(() => {
@@ -25,6 +26,22 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
     });
     return () => unsubscribe();
   }, []);
+
+  // Close volume popover on click outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        volumeContainerRef.current &&
+        !volumeContainerRef.current.contains(e.target as Node)
+      ) {
+        setShowVolumeSlider(false);
+      }
+    }
+    if (showVolumeSlider) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showVolumeSlider]);
 
   const handleToggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -38,7 +55,7 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
   };
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative flex items-center" ref={volumeContainerRef}>
       {/* Pill Container */}
       <div
         className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md shadow-xs transition-all ${
@@ -101,20 +118,23 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
             )}
           </button>
 
-          {/* Popover Volume Slider */}
+          {/* Popover Volume Slider (Positioned BELOW the Pill) */}
           <AnimatePresence>
             {showVolumeSlider && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                initial={{ opacity: 0, scale: 0.9, y: -6 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                className={`absolute bottom-full right-0 mb-2 p-2.5 rounded-2xl border shadow-xl backdrop-blur-xl flex flex-col items-center gap-2 z-50 ${
-                  isDark ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900"
+                exit={{ opacity: 0, scale: 0.9, y: -6 }}
+                transition={{ duration: 0.15 }}
+                className={`absolute top-full right-0 mt-2 p-2.5 rounded-2xl border shadow-2xl backdrop-blur-xl flex flex-col items-center gap-2 z-50 ${
+                  isDark
+                    ? "bg-slate-900/95 border-slate-700/80 text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+                    : "bg-white/95 border-slate-200 text-slate-900 shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
                 }`}
               >
                 <div className="flex items-center justify-between gap-3 w-28 text-[10px] font-mono font-bold">
-                  <span>BGM Vol</span>
-                  <span className="text-orange-500">{Math.round((isMuted ? 0 : volume) * 100)}%</span>
+                  <span className="text-slate-400">BGM Volume</span>
+                  <span className="text-orange-500 font-extrabold">{Math.round((isMuted ? 0 : volume) * 100)}%</span>
                 </div>
                 <input
                   type="range"
