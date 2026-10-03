@@ -520,55 +520,49 @@ export default function KeyboardLandingPage() {
               Zero-latency mechanical switch acoustics, adaptive per-key RGB matrices, and realistic touch-typing contact kinematics rendered in pure React & Tailwind.
             </motion.p>
 
-            {/* Hero CTA Action Row */}
+            {/* Hero CTA Action Row - Apple Liquid Glass Pills */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.45, ease: "easeOut" }}
-              className="mt-8 flex flex-wrap items-center justify-center gap-3"
+              className="mt-8 flex flex-wrap items-center justify-center gap-3.5"
             >
               <button
                 onClick={() => handleLaunchArcade("start")}
-                className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold text-sm shadow-xl hover:from-orange-500 hover:to-amber-500 hover:scale-105 active:scale-95 transition-all cursor-pointer group ring-2 ring-orange-400/40"
+                className="apple-glass-btn apple-glass-btn-primary flex items-center gap-2.5 px-7 py-3.5 font-bold text-sm cursor-pointer group"
               >
-                <Sparkles className="w-4 h-4 text-white fill-white group-hover:rotate-12 transition-transform" />
-                <span>Let's Start Training</span>
+                <Sparkles className="w-4 h-4 text-white fill-white group-hover:rotate-12 transition-transform drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
+                <span className="tracking-wide text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">Let's Start Training</span>
               </button>
 
               <button
                 onClick={scrollToKeyboard}
-                className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl border font-bold text-sm shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
-                  isDark
-                    ? "bg-slate-900/90 border-slate-700 text-white hover:bg-slate-800"
-                    : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
+                className={`apple-glass-btn flex items-center gap-2.5 px-6 py-3.5 font-bold text-sm cursor-pointer ${
+                  isDark ? "apple-glass-btn-dark" : "apple-glass-btn-light"
                 }`}
               >
-                <Play className="w-4 h-4 text-orange-500 fill-orange-500" />
+                <Play className="w-4 h-4 text-orange-500 fill-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
                 <span>Test Workbench</span>
-                <ArrowDown className="w-4 h-4 ml-0.5 opacity-70" />
+                <ArrowDown className="w-4 h-4 ml-0.5 opacity-60" />
               </button>
 
               <button
                 onClick={() => handleLaunchArcade("speedtest")}
-                className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl border font-bold text-sm shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
-                  isDark
-                    ? "bg-slate-900/90 border-slate-700 text-white hover:bg-slate-800"
-                    : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
+                className={`apple-glass-btn flex items-center gap-2.5 px-6 py-3.5 font-bold text-sm cursor-pointer ${
+                  isDark ? "apple-glass-btn-dark" : "apple-glass-btn-light"
                 }`}
               >
-                <Flame className="w-4 h-4 text-orange-500" />
+                <Flame className="w-4 h-4 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
                 <span>Speed Arena</span>
               </button>
 
               <button
                 onClick={() => setIsThemeSidebarOpen(true)}
-                className={`flex items-center gap-2 px-4 py-3.5 rounded-2xl border font-bold text-sm hover:scale-105 transition-all cursor-pointer ${
-                  isDark
-                    ? "bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800"
-                    : "bg-white/80 border-slate-200 text-slate-700 hover:bg-white"
+                className={`apple-glass-btn flex items-center gap-2.5 px-5 py-3.5 font-bold text-sm cursor-pointer ${
+                  isDark ? "apple-glass-btn-dark text-slate-200" : "apple-glass-btn-light text-slate-800"
                 }`}
               >
-                <Palette className="w-4 h-4 text-indigo-400" />
+                <Palette className="w-4 h-4 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.4)]" />
                 <span>Themes</span>
               </button>
             </motion.div>
