@@ -33,6 +33,12 @@ export const PLAYLIST: Track[] = [
     src: "/Notes_on_the_Glass.mp3",
     durationApprox: "3:00",
   },
+  {
+    id: "last_keystroke",
+    title: "The Last Keystroke",
+    src: "/The_Last_Keystroke.mp3",
+    durationApprox: "3:00",
+  },
 ];
 
 class BackgroundMusicEngine {
