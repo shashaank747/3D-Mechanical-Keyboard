@@ -58,14 +58,14 @@ export function MusicPlayer({ isDark }: MusicPlayerProps) {
     <div className="relative flex items-center" ref={volumeContainerRef}>
       {/* Pill Container */}
       <div
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md shadow-xs transition-all ${
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full apple-glass-pill transition-all ${
           isPlaying
             ? isDark
-              ? "bg-gradient-to-r from-orange-950/70 to-amber-950/70 border-orange-500/50 text-orange-200 shadow-[0_0_15px_rgba(249,115,22,0.2)]"
-              : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300 text-orange-900 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
+              ? "apple-glass-pill-dark border-orange-500/50 text-orange-300 shadow-[0_0_18px_rgba(249,115,22,0.25)]"
+              : "apple-glass-pill-light border-orange-400 text-orange-950 shadow-[0_0_18px_rgba(249,115,22,0.2)]"
             : isDark
-            ? "bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200"
-            : "bg-white/80 border-slate-200 text-slate-600 hover:text-slate-900"
+            ? "apple-glass-pill-dark text-slate-400 hover:text-slate-200"
+            : "apple-glass-pill-light text-slate-600 hover:text-slate-900"
         }`}
       >
         {/* Animated Soundwave Visualizer Bars */}

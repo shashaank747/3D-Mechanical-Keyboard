@@ -302,70 +302,79 @@ export default function KeyboardLandingPage() {
       {/* Floating 3D Parallax Keycap Elements (Home Hero Page Only) */}
       {currentPage === "home" && <ParallaxFloatingElements />}
 
-      {/* Sticky Glassmorphic Top Navigation */}
-      <header
-        className={`sticky top-0 z-40 w-full backdrop-blur-xl border-b ${
-          isDark ? "bg-slate-950/80 border-slate-800 text-white" : "bg-white/80 border-slate-200 text-slate-900"
-        } px-4 sm:px-8 py-3.5 transition-colors shadow-xs`}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-          {/* Left Side: Burger Menu (Keyboard Theme Palette & Navigation) + Logo */}
-          <div className="flex items-center gap-3">
-            {/* Burger Menu Button */}
+      {/* Hidden Apple Liquid Glass SVG Filter Definition */}
+      <svg className="hidden" aria-hidden="true">
+        <filter id="lg-dist" x="0%" y="0%" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.008" numOctaves="2" seed="92" result="noise" />
+          <feGaussianBlur in="noise" stdDeviation="2" result="blurred" />
+          <feDisplacementMap in="SourceGraphic" in2="blurred" scale="40" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
+
+      {/* Floating Apple Liquid Glass Top Navigation */}
+      <header className="sticky top-0 z-40 w-full px-3 sm:px-6 pt-3 pb-2 transition-all">
+        <div
+          className={`max-w-6xl mx-auto rounded-2xl sm:rounded-full px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between gap-3 apple-liquid-glass ${
+            isDark ? "apple-liquid-glass-dark text-white" : "apple-liquid-glass-light text-slate-900"
+          }`}
+        >
+          {/* Left Side: Theme Menu + Navigation Buttons + Branding */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Theme Palette Menu Button */}
             <button
               onClick={() => setIsThemeSidebarOpen(true)}
-              className={`p-2.5 rounded-xl shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center border ${
-                isDark
-                  ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white"
-                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+              className={`p-2 sm:p-2.5 rounded-xl sm:rounded-full apple-glass-pill transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center ${
+                isDark ? "apple-glass-pill-dark text-slate-200" : "apple-glass-pill-light text-slate-700"
               }`}
               aria-label="Keyboard Theme Palette"
               title="Keyboard Theme Palette"
             >
-              <Menu className="w-5 h-5 text-orange-500" />
+              <Menu className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-orange-500" />
             </button>
 
             {currentPage !== "home" && (
               <button
                 onClick={() => setCurrentPage("home")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-600 text-white text-xs font-bold shadow-md hover:bg-orange-500 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white text-xs font-bold shadow-md shadow-orange-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer ring-1 ring-white/30"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Home</span>
+                <span className="hidden sm:inline">Home</span>
               </button>
             )}
 
             {currentPage !== "home" && currentPage !== "start" && (
               <button
                 onClick={() => setCurrentPage("start")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                  isDark ? "bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700 hover:text-white" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all apple-glass-pill hover:scale-105 active:scale-95 cursor-pointer ${
+                  isDark ? "apple-glass-pill-dark text-slate-200" : "apple-glass-pill-light text-slate-700"
                 }`}
               >
                 <Gamepad2 className="w-3.5 h-3.5 text-orange-500" />
-                <span>Games Hub</span>
+                <span className="hidden sm:inline">Games Hub</span>
               </button>
             )}
 
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-black tracking-widest uppercase bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-500 bg-clip-text text-transparent">
+            {/* Brand Pill Badge */}
+            <div
+              className={`hidden sm:flex items-center gap-2 px-3.5 py-1 rounded-full apple-glass-pill ${
+                isDark ? "apple-glass-pill-dark" : "apple-glass-pill-light"
+              }`}
+            >
+              <span className="font-mono text-xs font-black tracking-widest uppercase bg-gradient-to-r from-orange-500 via-rose-500 to-amber-400 bg-clip-text text-transparent">
                 SETU
               </span>
               <span className={isDark ? "text-slate-600" : "text-slate-300"}>/</span>
-              <span className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              <span className={`text-xs sm:text-sm font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
                 3D Mechanical Keyboard
               </span>
             </div>
           </div>
 
-          {/* Center Badges */}
-          <div className="hidden md:flex items-center gap-2.5">
-            {/* Live Keystroke Hit Counter */}
+          {/* Center Badges: Keystroke Hits Counter */}
+          <div className="hidden lg:flex items-center gap-2.5">
             <div
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-mono font-bold transition-all ${
-                isDark
-                  ? "bg-slate-900/80 border-slate-800 text-slate-300"
-                  : "bg-slate-100/90 border-slate-200 text-slate-700 shadow-2xs"
+              className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-mono font-bold apple-glass-pill ${
+                isDark ? "apple-glass-pill-dark text-slate-300" : "apple-glass-pill-light text-slate-700"
               }`}
               title="Keystrokes pressed in this session"
             >
@@ -374,47 +383,43 @@ export default function KeyboardLandingPage() {
             </div>
           </div>
 
-          {/* Right Side Actions: Let's Play CTA + Login Button + Chill Vibe BGM Player */}
-          <div className="flex items-center gap-2.5">
+          {/* Right Side Actions: Let's Play CTA + User Profile Pill + Music Player */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {currentPage === "home" && (
               <button
                 onClick={() => setCurrentPage("start")}
-                className="flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs tracking-wider uppercase shadow-md shadow-orange-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer ring-1 ring-orange-400/40"
+                className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs tracking-wider uppercase shadow-md shadow-orange-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer ring-1 ring-white/30"
               >
-                <Gamepad2 className="w-4 h-4" />
+                <Gamepad2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Let's Play</span>
               </button>
             )}
 
-            {/* Login Button / User Profile Dropdown */}
+            {/* Login Button / User Profile Dropdown Pill */}
             {loggedInUser ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                    isDark
-                      ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:border-orange-500/50 hover:text-white"
-                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-orange-500/50 hover:text-slate-900"
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all apple-glass-pill hover:scale-105 active:scale-95 cursor-pointer ${
+                    isDark ? "apple-glass-pill-dark text-slate-200" : "apple-glass-pill-light text-slate-700"
                   }`}
                   title="User Profile & Settings"
                 >
                   <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white text-[10px] font-black uppercase shadow-xs">
                     {loggedInUser.charAt(0)}
                   </div>
-                  <span className="max-w-[100px] sm:max-w-[130px] truncate">{loggedInUser}</span>
+                  <span className="max-w-[85px] sm:max-w-[120px] truncate">{loggedInUser}</span>
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180 text-orange-500" : ""}`} />
                 </button>
 
                 {/* Dropdown Popover */}
                 {isUserMenuOpen && (
                   <div
-                    className={`absolute right-0 mt-2 w-56 rounded-2xl border shadow-2xl backdrop-blur-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 ${
-                      isDark
-                        ? "bg-slate-900/95 border-slate-700/90 text-slate-200 shadow-[0_10px_35px_rgba(0,0,0,0.6)]"
-                        : "bg-white/95 border-slate-200 text-slate-800 shadow-[0_10px_35px_rgba(0,0,0,0.15)]"
+                    className={`absolute right-0 mt-2.5 w-56 rounded-3xl border shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 apple-liquid-glass ${
+                      isDark ? "apple-liquid-glass-dark text-slate-200" : "apple-liquid-glass-light text-slate-800"
                     }`}
                   >
-                    <div className="px-3 py-2.5 border-b border-slate-200 dark:border-slate-800 mb-1.5">
+                    <div className="px-3.5 py-2.5 border-b border-white/10 dark:border-white/5 mb-1.5">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Signed in as</p>
                       <p className="text-sm font-black text-orange-500 truncate">{loggedInUser}</p>
                       <div className="flex items-center gap-1.5 mt-1.5">
@@ -433,7 +438,7 @@ export default function KeyboardLandingPage() {
                         }
                         setIsUserMenuOpen(false);
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-red-500 hover:bg-red-500/10 active:scale-98 transition-all cursor-pointer text-left"
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-red-500 hover:bg-red-500/10 active:scale-98 transition-all cursor-pointer text-left"
                     >
                       <LogOut className="w-4 h-4 text-red-500" />
                       <span>Log Out</span>
@@ -444,10 +449,8 @@ export default function KeyboardLandingPage() {
             ) : (
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs hover:scale-105 active:scale-95 cursor-pointer ${
-                  isDark
-                    ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white"
-                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all apple-glass-pill hover:scale-105 active:scale-95 cursor-pointer ${
+                  isDark ? "apple-glass-pill-dark text-slate-200" : "apple-glass-pill-light text-slate-700"
                 }`}
               >
                 <LogIn className="w-3.5 h-3.5 text-orange-500" />
