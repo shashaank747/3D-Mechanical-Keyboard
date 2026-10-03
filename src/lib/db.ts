@@ -379,6 +379,79 @@ export async function loginUser(params: {
   }
 }
 
+// RESET PASSWORD (SUPABASE + SERVER + LOCAL)
+export async function resetPassword(params: {
+  loginIdentifier: string;
+  newPassword: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const identifier = params.loginIdentifier.trim().toLowerCase();
+    const newHash = await hashClientPassword(params.newPassword);
+
+    let updated = false;
+
+    // 1. Update in Supabase Cloud
+    try {
+      const { data } = await supabase
+        .from("students")
+        .update({ password_hash: newHash })
+        .or(`email.ilike.${identifier},username.ilike.${identifier}`)
+        .select();
+
+      if (data && data.length > 0) {
+        updated = true;
+      }
+    } catch {
+      // ignore
+    }
+
+    // 2. Update in server API
+    try {
+      const res = await fetch("/api/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          loginIdentifier: params.loginIdentifier.trim(),
+          newPassword: params.newPassword,
+        }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) updated = true;
+      }
+    } catch {
+      // ignore
+    }
+
+    // 3. Update in local storage fallback
+    const users = getLocalUsers();
+    const user = users.find(
+      (u) =>
+        u.email.toLowerCase() === identifier ||
+        u.username.toLowerCase() === identifier
+    );
+    if (user) {
+      user.password = newHash;
+      saveLocalUsers(users);
+      updated = true;
+    }
+
+    if (!updated) {
+      return {
+        success: false,
+        error: "No account found matching that username or email address.",
+      };
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Password reset failed",
+    };
+  }
+}
+
 // RECORD STUDENT ACTIVITY & PROGRESS UPDATE (SUPABASE + SERVER + LOCAL)
 export async function updateStudentProgress(params: {
   username?: string;

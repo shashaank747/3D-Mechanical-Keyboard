@@ -15,13 +15,13 @@ import { SoundMatrixGame } from "@/components/ui/SoundMatrixGame";
 import { BlindTypingGame } from "@/components/ui/BlindTypingGame";
 import { CodeSprintGame } from "@/components/ui/CodeSprintGame";
 import { KEYBOARD_THEMES, type KeyboardTheme } from "@/lib/themes";
-import { registerUser, loginUser, updateStudentProgress, type UserRecord } from "@/lib/db";
+import { registerUser, loginUser, resetPassword, updateStudentProgress, type UserRecord } from "@/lib/db";
 import { 
   Keyboard as KeyboardIcon, Sparkles, 
   Check, RotateCcw, Flame, Palette,
   Play, ArrowLeft, ArrowDown, BookOpen, Layers, Menu,
   Volume2, Gamepad2, ShieldCheck, LogIn, User, X, AlertTriangle, UserPlus,
-  Eye, EyeOff
+  Eye, EyeOff, LogOut, ChevronDown, KeyRound, CheckCircle2
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { MusicPlayer } from "@/components/ui/MusicPlayer";
@@ -37,9 +37,12 @@ export default function KeyboardLandingPage() {
   
   // Authentication & Arcade Access Gating
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showForgotNewPassword, setShowForgotNewPassword] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("setu_active_user") || null;
@@ -51,12 +54,29 @@ export default function KeyboardLandingPage() {
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [forgotSuccessMessage, setForgotSuccessMessage] = useState<string | null>(null);
   const [loginWarningMessage, setLoginWarningMessage] = useState<string | null>(null);
 
   const [colorZones, setColorZones] = useState<boolean>(false);
   const [testedKeys, setTestedKeys] = useState<Set<string>>(new Set());
   const [lastTriggeredKey, setLastTriggeredKey] = useState<{ key: string; code: string; time: number } | null>(null);
   const [totalKeyHits, setTotalKeyHits] = useState<number>(0);
+
+  // Close User Menu on click outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    if (isUserMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isUserMenuOpen]);
 
   // Gated Navigation: Strictly requires login before accessing "Let's Play" or Games
   const handleLaunchArcade = useCallback((targetPage: AppPage = "start") => {
@@ -351,20 +371,61 @@ export default function KeyboardLandingPage() {
               </button>
             )}
 
-            {/* Login Button / User Profile */}
+            {/* Login Button / User Profile Dropdown */}
             {loggedInUser ? (
-              <button
-                onClick={() => setLoggedInUser(null)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                  isDark
-                    ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white"
-                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-                title="Click to logout"
-              >
-                <User className="w-3.5 h-3.5 text-orange-500" />
-                <span>{loggedInUser}</span>
-              </button>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                    isDark
+                      ? "bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:border-orange-500/50 hover:text-white"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-orange-500/50 hover:text-slate-900"
+                  }`}
+                  title="User Profile & Settings"
+                >
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white text-[10px] font-black uppercase shadow-xs">
+                    {loggedInUser.charAt(0)}
+                  </div>
+                  <span className="max-w-[100px] sm:max-w-[130px] truncate">{loggedInUser}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180 text-orange-500" : ""}`} />
+                </button>
+
+                {/* Dropdown Popover */}
+                {isUserMenuOpen && (
+                  <div
+                    className={`absolute right-0 mt-2 w-56 rounded-2xl border shadow-2xl backdrop-blur-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 ${
+                      isDark
+                        ? "bg-slate-900/95 border-slate-700/90 text-slate-200 shadow-[0_10px_35px_rgba(0,0,0,0.6)]"
+                        : "bg-white/95 border-slate-200 text-slate-800 shadow-[0_10px_35px_rgba(0,0,0,0.15)]"
+                    }`}
+                  >
+                    <div className="px-3 py-2.5 border-b border-slate-200 dark:border-slate-800 mb-1.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Signed in as</p>
+                      <p className="text-sm font-black text-orange-500 truncate">{loggedInUser}</p>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wide">
+                          Supabase Synced • Active
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setLoggedInUser(null);
+                        if (typeof window !== "undefined") {
+                          localStorage.removeItem("setu_active_user");
+                        }
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-red-500 hover:bg-red-500/10 active:scale-98 transition-all cursor-pointer text-left"
+                    >
+                      <LogOut className="w-4 h-4 text-red-500" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() => setIsLoginModalOpen(true)}
@@ -938,12 +999,22 @@ export default function KeyboardLandingPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-orange-500/20">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25 shrink-0">
-                    {authMode === "signin" ? <LogIn className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />}
+                    {authMode === "signin" ? (
+                      <LogIn className="w-6 h-6" />
+                    ) : authMode === "signup" ? (
+                      <UserPlus className="w-6 h-6" />
+                    ) : (
+                      <KeyRound className="w-6 h-6" />
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg sm:text-xl font-black tracking-tight">
-                        {authMode === "signin" ? "Student & Developer Sign In" : "Create SETU Account"}
+                        {authMode === "signin"
+                          ? "Student & Developer Sign In"
+                          : authMode === "signup"
+                          ? "Create SETU Account"
+                          : "Reset Account Password"}
                       </h2>
                       <span className="text-[10px] px-2 py-0.5 rounded-md bg-orange-500 text-white font-mono uppercase font-black">
                         SETU
@@ -952,7 +1023,9 @@ export default function KeyboardLandingPage() {
                     <p className={`text-xs sm:text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                       {authMode === "signin"
                         ? "Sign in to unlock the Arcade, save typing metrics, and access all 16 levels"
-                        : "Join SETU to track muscle memory streaks, personal best WPM, and leaderboards"}
+                        : authMode === "signup"
+                        ? "Join SETU to track muscle memory streaks, personal best WPM, and leaderboards"
+                        : "Enter your registered email or username to update your password across Supabase"}
                     </p>
                   </div>
                 </div>
@@ -961,8 +1034,12 @@ export default function KeyboardLandingPage() {
                 <div className="flex rounded-2xl p-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0 self-start sm:self-auto">
                   <button
                     type="button"
-                    onClick={() => setAuthMode("signin")}
-                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    onClick={() => {
+                      setAuthMode("signin");
+                      setLoginWarningMessage(null);
+                      setForgotSuccessMessage(null);
+                    }}
+                    className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                       authMode === "signin"
                         ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
                         : "text-slate-400 hover:text-slate-200"
@@ -972,8 +1049,12 @@ export default function KeyboardLandingPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setAuthMode("signup")}
-                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    onClick={() => {
+                      setAuthMode("signup");
+                      setLoginWarningMessage(null);
+                      setForgotSuccessMessage(null);
+                    }}
+                    className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                       authMode === "signup"
                         ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
                         : "text-slate-400 hover:text-slate-200"
@@ -981,10 +1062,50 @@ export default function KeyboardLandingPage() {
                   >
                     Create Account
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("forgot");
+                      setLoginWarningMessage(null);
+                      setForgotSuccessMessage(null);
+                      if (loginEmail && !forgotEmail) setForgotEmail(loginEmail);
+                    }}
+                    className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      authMode === "forgot"
+                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Forgot Password
+                  </button>
                 </div>
               </div>
 
-              {/* Form Input Row (Full-width grid) */}
+              {/* Forgot Password Success Banner */}
+              {forgotSuccessMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 shadow-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                    <span>{forgotSuccessMessage}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("signin");
+                      setForgotSuccessMessage(null);
+                    }}
+                    className="px-3 py-1 bg-emerald-500 text-white text-[11px] font-black rounded-lg hover:bg-emerald-600 transition-all cursor-pointer uppercase shrink-0"
+                  >
+                    Sign In Now
+                  </button>
+                </motion.div>
+              )}
+
+              {/* Forms by Mode */}
               {authMode === "signin" ? (
                 <form
                   onSubmit={async (e) => {
@@ -1010,7 +1131,7 @@ export default function KeyboardLandingPage() {
                       }
                     }
                   }}
-                  className="flex flex-col gap-4"
+                  className="flex flex-col gap-3"
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
                     {/* Email Input */}
@@ -1032,7 +1153,21 @@ export default function KeyboardLandingPage() {
 
                     {/* Password Input */}
                     <div className="sm:col-span-4 flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthMode("forgot");
+                            setLoginWarningMessage(null);
+                            setForgotSuccessMessage(null);
+                            setForgotEmail(loginEmail);
+                          }}
+                          className="text-[11px] font-bold text-orange-500 hover:text-orange-400 transition-colors cursor-pointer"
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
                       <div className="relative">
                         <input
                           type={showLoginPassword ? "text" : "password"}
@@ -1069,7 +1204,7 @@ export default function KeyboardLandingPage() {
                     </div>
                   </div>
                 </form>
-              ) : (
+              ) : authMode === "signup" ? (
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
@@ -1167,6 +1302,120 @@ export default function KeyboardLandingPage() {
                       >
                         <UserPlus className="w-4 h-4" />
                         <span>Create & Play</span>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                /* Forgot / Reset Password Form */
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!forgotEmail.trim()) {
+                      setLoginWarningMessage("Please enter your registered username or email.");
+                      return;
+                    }
+                    if (forgotNewPassword.length < 6) {
+                      setLoginWarningMessage("New password must be at least 6 characters long.");
+                      return;
+                    }
+                    if (forgotNewPassword !== forgotConfirmPassword) {
+                      setLoginWarningMessage("Passwords do not match. Please retype carefully.");
+                      return;
+                    }
+
+                    setLoginWarningMessage(null);
+                    const res = await resetPassword({
+                      loginIdentifier: forgotEmail.trim(),
+                      newPassword: forgotNewPassword,
+                    });
+
+                    if (res.success) {
+                      setForgotSuccessMessage("Password reset successfully! Synced across Supabase.");
+                      setLoginEmail(forgotEmail.trim());
+                      setLoginPassword("");
+                      setForgotNewPassword("");
+                      setForgotConfirmPassword("");
+                      confetti({ particleCount: 80, spread: 70, origin: { y: 0.5 } });
+                      setTimeout(() => {
+                        setAuthMode("signin");
+                      }, 2200);
+                    } else {
+                      setLoginWarningMessage(res.error || "Failed to reset password. User not found.");
+                    }
+                  }}
+                  className="flex flex-col gap-4"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+                    {/* Account Identifier */}
+                    <div className="sm:col-span-4 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email or Username</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Registered username or email"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
+                          isDark
+                            ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                            : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                        }`}
+                      />
+                    </div>
+
+                    {/* New Password */}
+                    <div className="sm:col-span-3 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">New Password</label>
+                      <div className="relative">
+                        <input
+                          type={showForgotNewPassword ? "text" : "password"}
+                          required
+                          placeholder="Min 6 characters"
+                          value={forgotNewPassword}
+                          onChange={(e) => setForgotNewPassword(e.target.value)}
+                          className={`w-full pl-4 pr-11 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
+                            isDark
+                              ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                              : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotNewPassword((prev) => !prev)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-orange-500 transition-colors cursor-pointer"
+                          title={showForgotNewPassword ? "Hide password" : "Show password"}
+                        >
+                          {showForgotNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirm New Password */}
+                    <div className="sm:col-span-2 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Confirm</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="Retype password"
+                        value={forgotConfirmPassword}
+                        onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                        className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
+                          isDark
+                            ? "bg-slate-950 border-slate-800 focus:border-orange-500 text-white"
+                            : "bg-slate-50 border-slate-200 focus:border-orange-500 text-slate-900"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Reset Button */}
+                    <div className="sm:col-span-3 flex flex-col justify-end">
+                      <button
+                        type="submit"
+                        className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-lg shadow-orange-500/25 hover:scale-102 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <KeyRound className="w-4 h-4" />
+                        <span>Update Password</span>
                       </button>
                     </div>
                   </div>

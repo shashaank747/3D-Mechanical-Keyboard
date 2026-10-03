@@ -796,6 +796,53 @@ function userDatabasePlugin(): Plugin {
           return;
         }
 
+        // 3.5. POST /api/reset-password
+        if (req.method === 'POST' && url === '/api/reset-password') {
+          let body = '';
+          req.on('data', (chunk) => {
+            body += chunk;
+          });
+          req.on('end', () => {
+            try {
+              const data = JSON.parse(body);
+              const users = ensureDb();
+              const identifier = (data.loginIdentifier || '').trim().toLowerCase();
+              const newPassword = data.newPassword || '';
+
+              if (!identifier || !newPassword) {
+                res.statusCode = 400;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ success: false, error: 'Username/Email and New Password are required' }));
+                return;
+              }
+
+              const user = users.find(
+                (u) =>
+                  u.email.toLowerCase() === identifier ||
+                  u.username.toLowerCase() === identifier
+              );
+
+              if (!user) {
+                res.statusCode = 404;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ success: false, error: 'No account found with that username or email' }));
+                return;
+              }
+
+              user.password = hashPassword(newPassword);
+              saveDb(users);
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true }));
+            } catch (err: unknown) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: false, error: (err as Error).message }));
+            }
+          });
+          return;
+        }
+
         // 4. POST /api/progress
         if (req.method === 'POST' && url === '/api/progress') {
           let body = '';
