@@ -1,4 +1,5 @@
-// Background Music Audio Engine with Sequential Playlist Support
+// Background Music Audio Engine with Shuffled Non-Repeating Cycle Queue
+// Guarantees all 4 songs are played in random order before any song repeats
 
 export interface Track {
   id: string;
@@ -36,7 +37,8 @@ export const PLAYLIST: Track[] = [
 
 class BackgroundMusicEngine {
   private audio: HTMLAudioElement | null = null;
-  private currentTrackIndex: number = 0;
+  private shuffledQueue: number[] = [];
+  private queuePosition: number = 0; // index pointer in shuffledQueue
   private isPlaying: boolean = false;
   private isMuted: boolean = false;
   private volume: number = 0.35; // Balanced ambient background level
@@ -44,15 +46,39 @@ class BackgroundMusicEngine {
   private userHasInteracted: boolean = false;
 
   constructor() {
+    this.generateNewShuffledQueue();
     if (typeof window !== "undefined") {
-      const initialRandomIndex = Math.floor(Math.random() * PLAYLIST.length);
-      this.initAudio(initialRandomIndex);
+      this.initAudio(this.getCurrentTrackIndex());
     }
   }
 
-  private initAudio(index: number) {
-    this.currentTrackIndex = (index + PLAYLIST.length) % PLAYLIST.length;
-    const track = PLAYLIST[this.currentTrackIndex];
+  // Fisher-Yates Shuffle that guarantees each of the 4 songs is queued once per cycle
+  private generateNewShuffledQueue(lastPlayedTrackIndex?: number) {
+    const indices = PLAYLIST.map((_, i) => i);
+    
+    // Shuffle the indices randomly
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+
+    // Ensure the first song of the new cycle is not identical to the last played song
+    if (lastPlayedTrackIndex !== undefined && indices.length > 1 && indices[0] === lastPlayedTrackIndex) {
+      const swapWith = 1 + Math.floor(Math.random() * (indices.length - 1));
+      [indices[0], indices[swapWith]] = [indices[swapWith], indices[0]];
+    }
+
+    this.shuffledQueue = indices;
+    this.queuePosition = 0;
+  }
+
+  public getCurrentTrackIndex(): number {
+    if (this.shuffledQueue.length === 0) return 0;
+    return this.shuffledQueue[this.queuePosition] ?? 0;
+  }
+
+  private initAudio(trackIndex: number) {
+    const track = PLAYLIST[trackIndex] || PLAYLIST[0];
 
     if (this.audio) {
       this.audio.pause();
@@ -75,7 +101,7 @@ class BackgroundMusicEngine {
         this.notify();
       });
 
-      // When the current track ends, randomly pick another song from the playlist!
+      // When the current track ends, advance to the next song in the shuffled queue
       this.audio.addEventListener("ended", () => {
         this.nextTrack(true);
       });
@@ -98,7 +124,7 @@ class BackgroundMusicEngine {
           this.notify();
         })
         .catch(() => {
-          // Autoplay policy prevented playback until user clicks
+          // Autoplay policy prevented playback until user interaction
         });
     }
   }
@@ -119,13 +145,15 @@ class BackgroundMusicEngine {
   }
 
   public nextTrack(autoPlay = true) {
-    // Pick another random song from playlist to eliminate repeating pattern
-    const otherIndices = PLAYLIST.map((_, i) => i).filter((i) => i !== this.currentTrackIndex);
-    const nextIdx = otherIndices.length > 0
-      ? otherIndices[Math.floor(Math.random() * otherIndices.length)]
-      : (this.currentTrackIndex + 1) % PLAYLIST.length;
+    const currentTrackIdx = this.getCurrentTrackIndex();
+    this.queuePosition += 1;
 
-    this.currentTrackIndex = nextIdx;
+    // When all 4 songs have finished playing, reshuffle for a new randomized cycle
+    if (this.queuePosition >= this.shuffledQueue.length) {
+      this.generateNewShuffledQueue(currentTrackIdx);
+    }
+
+    const nextIdx = this.getCurrentTrackIndex();
     if (this.audio) {
       this.audio.src = PLAYLIST[nextIdx].src;
       this.audio.load();
@@ -138,12 +166,13 @@ class BackgroundMusicEngine {
   }
 
   public prevTrack(autoPlay = true) {
-    const otherIndices = PLAYLIST.map((_, i) => i).filter((i) => i !== this.currentTrackIndex);
-    const prevIdx = otherIndices.length > 0
-      ? otherIndices[Math.floor(Math.random() * otherIndices.length)]
-      : (this.currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+    if (this.queuePosition > 0) {
+      this.queuePosition -= 1;
+    } else {
+      this.queuePosition = Math.max(0, this.shuffledQueue.length - 1);
+    }
 
-    this.currentTrackIndex = prevIdx;
+    const prevIdx = this.getCurrentTrackIndex();
     if (this.audio) {
       this.audio.src = PLAYLIST[prevIdx].src;
       this.audio.load();
@@ -184,11 +213,8 @@ class BackgroundMusicEngine {
   }
 
   public getCurrentTrack(): Track {
-    return PLAYLIST[this.currentTrackIndex] || PLAYLIST[0];
-  }
-
-  public getCurrentTrackIndex(): number {
-    return this.currentTrackIndex;
+    const idx = this.getCurrentTrackIndex();
+    return PLAYLIST[idx] || PLAYLIST[0];
   }
 
   public getCurrentTime(): number {
