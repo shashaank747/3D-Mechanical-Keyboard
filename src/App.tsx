@@ -1039,7 +1039,7 @@ export default function KeyboardLandingPage() {
                       setLoginWarningMessage(null);
                       setForgotSuccessMessage(null);
                     }}
-                    className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                       authMode === "signin"
                         ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
                         : "text-slate-400 hover:text-slate-200"
@@ -1054,29 +1054,13 @@ export default function KeyboardLandingPage() {
                       setLoginWarningMessage(null);
                       setForgotSuccessMessage(null);
                     }}
-                    className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                       authMode === "signup"
                         ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
                         : "text-slate-400 hover:text-slate-200"
                     }`}
                   >
                     Create Account
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMode("forgot");
-                      setLoginWarningMessage(null);
-                      setForgotSuccessMessage(null);
-                      if (loginEmail && !forgotEmail) setForgotEmail(loginEmail);
-                    }}
-                    className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                      authMode === "forgot"
-                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                        : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    Forgot Password
                   </button>
                 </div>
               </div>
@@ -1418,6 +1402,21 @@ export default function KeyboardLandingPage() {
                         <span>Update Password</span>
                       </button>
                     </div>
+                  </div>
+
+                  <div className="flex justify-start">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode("signin");
+                        setLoginWarningMessage(null);
+                        setForgotSuccessMessage(null);
+                      }}
+                      className="text-xs font-bold text-orange-500 hover:text-orange-400 transition-colors cursor-pointer flex items-center gap-1.5 hover:underline"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Back to Sign In</span>
+                    </button>
                   </div>
                 </form>
               )}
