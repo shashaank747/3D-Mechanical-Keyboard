@@ -363,20 +363,29 @@ export default function KeyboardLandingPage() {
               </button>
             )}
 
-            {/* Brand Pill Badge */}
-            <div
-              className={`hidden sm:flex items-center gap-2 px-3.5 py-1 rounded-full apple-glass-pill ${
+            {/* Brand Pill Badge with Logo */}
+            <button
+              onClick={() => setCurrentPage("home")}
+              className={`hidden sm:flex items-center gap-2.5 px-3 py-1 rounded-full apple-glass-pill hover:scale-102 active:scale-98 transition-all cursor-pointer ${
                 isDark ? "apple-glass-pill-dark" : "apple-glass-pill-light"
               }`}
+              title="Return to Home Studio"
             >
-              <span className="font-mono text-xs font-black tracking-widest uppercase bg-gradient-to-r from-orange-500 via-rose-500 to-amber-400 bg-clip-text text-transparent">
-                SETU
-              </span>
-              <span className={isDark ? "text-slate-600" : "text-slate-300"}>/</span>
-              <span className={`text-xs sm:text-sm font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                3D Mechanical Keyboard
-              </span>
-            </div>
+              <img
+                src="/icon_logo.png"
+                alt="Website Logo"
+                className="w-6 h-6 rounded-full object-cover shadow-sm ring-1 ring-orange-500/40"
+              />
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono text-xs font-black tracking-widest uppercase bg-gradient-to-r from-orange-500 via-rose-500 to-amber-400 bg-clip-text text-transparent">
+                  SETU
+                </span>
+                <span className={isDark ? "text-slate-600" : "text-slate-300"}>/</span>
+                <span className={`text-xs sm:text-sm font-black tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+                  3D Mechanical Keyboard
+                </span>
+              </div>
+            </button>
           </div>
 
           {/* Center Badges: Keystroke Hits Counter */}
@@ -945,7 +954,12 @@ export default function KeyboardLandingPage() {
           className={`relative z-10 w-full border-t ${currentTheme.headerBorder} py-8 px-6 mt-12 bg-white/40 backdrop-blur-md transition-colors`}
         >
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs opacity-75">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/icon_logo.png"
+                alt="Website Logo"
+                className="w-5 h-5 rounded-full object-cover shadow-xs"
+              />
               <span className="font-mono font-black text-orange-600">SETU</span>
               <span>•</span>
               <span className="font-semibold">3D Mechanical Keyboard Engine</span>
@@ -1037,16 +1051,12 @@ export default function KeyboardLandingPage() {
 
               {/* Top Header Row: Branding & Mode Switcher Tabs */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-orange-500/20">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25 shrink-0">
-                    {authMode === "signin" ? (
-                      <LogIn className="w-6 h-6" />
-                    ) : authMode === "signup" ? (
-                      <UserPlus className="w-6 h-6" />
-                    ) : (
-                      <KeyRound className="w-6 h-6" />
-                    )}
-                  </div>
+                <div className="flex items-center gap-3.5">
+                  <img
+                    src="/icon_logo.png"
+                    alt="Logo"
+                    className="w-11 h-11 rounded-2xl object-cover shadow-lg shadow-orange-500/25 ring-2 ring-orange-400/40 shrink-0"
+                  />
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg sm:text-xl font-black tracking-tight">
