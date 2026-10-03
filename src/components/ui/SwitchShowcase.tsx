@@ -1,26 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import type { KeyboardTheme } from "@/lib/themes";
-import { soundEngine } from "@/lib/sound";
 import {
-  Volume2,
   Gamepad2,
   Palette,
   ShieldCheck,
   Code2,
   Sparkles,
-  Zap,
-  Flame,
   Layers,
   ArrowRight,
   Database,
-  Lock,
   Headphones,
   CheckCircle2,
   Terminal,
-  Play
+  Zap,
+  Flame,
+  Music,
+  Activity,
+  Award
 } from "lucide-react";
 
 interface SwitchShowcaseProps {
@@ -35,181 +34,124 @@ export function SwitchShowcase({
   onOpenThemes,
 }: SwitchShowcaseProps) {
   const isDark = theme?.isDark || theme?.category === "Dark";
-  const [activeSoundSwitch, setActiveSoundSwitch] = useState<string>("Tactile Brown");
-  const [soundFeedback, setSoundFeedback] = useState<string | null>(null);
 
-  const switchSounds = [
-    { name: "Linear Red", feel: "Smooth & Silent", key: "A", color: "bg-red-500", border: "border-red-500/40 text-red-400" },
-    { name: "Tactile Brown", feel: "Satisfying Bump", key: "B", color: "bg-amber-600", border: "border-amber-500/40 text-amber-400" },
-    { name: "Clicky Blue", feel: "Crisp Clack", key: "C", color: "bg-cyan-500", border: "border-cyan-500/40 text-cyan-400" },
-    { name: "Cream Yellow", feel: "Deep Thock", key: "D", color: "bg-yellow-400", border: "border-yellow-500/40 text-yellow-400" },
+  const allGames = [
+    { name: "Code Sprint", tag: "Python, TS, Rust", icon: Terminal, color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+    { name: "Meteor Defense", tag: "Arcade Blaster", icon: Flame, color: "text-rose-400 bg-rose-500/10 border-rose-500/20" },
+    { name: "Speed Arena", tag: "Live WPM & Accuracy", icon: Zap, color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+    { name: "Shortcuts Dojo", tag: "OS & Dev Hotkeys", icon: Award, color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20" },
+    { name: "Typing Academy", tag: "16 Step Lessons", icon: Sparkles, color: "text-orange-400 bg-orange-500/10 border-orange-500/20" },
+    { name: "Blind Typing", tag: "Blackout Memory", icon: Activity, color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20" },
+    { name: "Sound Matrix", tag: "Audio-Visual Beats", icon: Music, color: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
   ];
 
-  const handleTestSound = (item: typeof switchSounds[0]) => {
-    setActiveSoundSwitch(item.name);
-    soundEngine.playKeySound(item.key);
-    setSoundFeedback(`Played ${item.name} (${item.feel})`);
-    setTimeout(() => setSoundFeedback(null), 1500);
-  };
-
   return (
-    <section id="features" className="w-full max-w-6xl my-16 px-4 flex flex-col gap-10 relative z-10">
+    <section id="features" className="w-full max-w-6xl my-16 px-4 flex flex-col gap-8 relative z-10">
       {/* Section Header */}
       <div className="flex flex-col items-center text-center gap-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-500 text-xs font-mono font-bold uppercase tracking-wider">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Core Platform Superpowers</span>
+          <span>Platform Features & Highlights</span>
         </div>
         <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-          Engineered for <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400 bg-clip-text text-transparent">Peak Typing Mastery</span>
+          Everything Built for <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400 bg-clip-text text-transparent">Typing Excellence</span>
         </h2>
         <p className={`text-sm sm:text-base max-w-2xl ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-          From dynamic acoustic synthesis to 7 interactive developer arcade games and real-time cloud analytics.
+          Explore 7 developer typing games, 20+ keycap palettes, 3D mechanical physics, and real-time cloud analytics.
         </p>
       </div>
 
-      {/* 4 Feature Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+      {/* Asymmetrical Bento Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
         
-        {/* CARD 1: Mechanical Keyboard Sound FX */}
+        {/* ============================================================ */}
+        {/* 🌟 HERO BENTO CARD: 7 Coding & Arcade Games (Col-span 8)      */}
+        {/* ============================================================ */}
         <motion.div
-          whileHover={{ y: -6, transition: { duration: 0.2 } }}
-          className={`rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-lg transition-all ${
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          className={`md:col-span-8 rounded-3xl border p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl shadow-xl transition-all relative overflow-hidden ${
             isDark
-              ? "bg-slate-900/80 border-slate-800 hover:border-orange-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
-              : "bg-white/90 border-slate-200/90 hover:border-orange-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.06)]"
+              ? "bg-slate-900/85 border-slate-800 hover:border-orange-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]"
+              : "bg-white/90 border-slate-200/90 hover:border-orange-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.08)]"
           }`}
         >
-          <div className="flex flex-col gap-4">
-            {/* Top Badge & Icon */}
+          {/* Subtle Ambient Background Glow */}
+          <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-gradient-to-br from-orange-500/15 to-amber-500/10 blur-3xl pointer-events-none" />
+
+          <div className="flex flex-col gap-5 relative z-10">
             <div className="flex items-center justify-between">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20">
-                <Volume2 className="w-5 h-5" />
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25">
+                  <Gamepad2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono font-black uppercase tracking-wider text-orange-500 block">
+                    Complete Arcade & Syntax Hub
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black tracking-tight">
+                    7 Interactive Developer Games
+                  </h3>
+                </div>
               </div>
-              <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-500 border border-orange-500/30">
-                Acoustic FX
+              <span className="hidden sm:inline-flex text-xs font-mono font-bold uppercase px-3 py-1 rounded-full bg-orange-500/15 text-orange-500 border border-orange-500/30">
+                16+ Levels
               </span>
             </div>
 
-            <div>
-              <h3 className="text-lg font-black tracking-tight mb-1.5">
-                Mechanical Audio Engine
-              </h3>
-              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                Real-time procedural Web Audio synthesis with spatial stereo feedback and natural pitch variations.
-              </p>
-            </div>
+            <p className={`text-xs sm:text-sm leading-relaxed max-w-2xl ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+              Level up muscle memory with real programming syntax, live WPM leaderboards, and arcade reflex shooters:
+            </p>
 
-            {/* Interactive Switch Sound Testers */}
-            <div className="flex flex-col gap-1.5 pt-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Click to test sound:
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                {switchSounds.map((sw) => (
-                  <button
-                    key={sw.name}
-                    onClick={() => handleTestSound(sw)}
-                    className={`px-2.5 py-2 rounded-xl border text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer text-left ${
-                      activeSoundSwitch === sw.name
-                        ? isDark
-                          ? "bg-slate-800 border-orange-500 text-orange-400 shadow-xs"
-                          : "bg-orange-50 border-orange-400 text-orange-600 shadow-xs"
-                        : isDark
-                        ? "bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700"
-                        : "bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300"
+            {/* 7 Games Interactive Pills Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {allGames.map((g) => {
+                const IconComponent = g.icon;
+                return (
+                  <div
+                    key={g.name}
+                    className={`p-2.5 rounded-2xl border flex flex-col gap-1 transition-all ${
+                      isDark ? "bg-slate-950/70 border-slate-800" : "bg-slate-50 border-slate-200"
                     }`}
                   >
-                    <span className={`w-2 h-2 rounded-full ${sw.color} shrink-0`} />
-                    <span className="truncate">{sw.name.split(" ")[0]}</span>
-                  </button>
-                ))}
-              </div>
+                    <div className="flex items-center gap-1.5">
+                      <IconComponent className="w-3.5 h-3.5 text-orange-500" />
+                      <span className="text-xs font-extrabold truncate">{g.name}</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400 truncate">{g.tag}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 font-medium">
-              {soundFeedback || "Tactile & linear profiles"}
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 relative z-10">
+            <span className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              Unlocked upon login with real-time score saving
             </span>
-            <Headphones className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-          </div>
-        </motion.div>
-
-        {/* CARD 2: 7 Interactive Games & Arcade */}
-        <motion.div
-          whileHover={{ y: -6, transition: { duration: 0.2 } }}
-          className={`rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-lg transition-all ${
-            isDark
-              ? "bg-slate-900/80 border-slate-800 hover:border-amber-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
-              : "bg-white/90 border-slate-200/90 hover:border-amber-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.06)]"
-          }`}
-        >
-          <div className="flex flex-col gap-4">
-            {/* Top Badge & Icon */}
-            <div className="flex items-center justify-between">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 text-white shadow-md shadow-amber-500/20">
-                <Gamepad2 className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30">
-                7 Arcade Games
-              </span>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-black tracking-tight mb-1.5">
-                Coding & Speed Arcade
-              </h3>
-              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                Master developer muscle memory through 7 gamified challenges and live coding syntax.
-              </p>
-            </div>
-
-            {/* Games Preview Chips */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {[
-                { name: "Code Sprint", tag: "Python/Rust", color: "text-emerald-400" },
-                { name: "Meteor Defense", tag: "Shooter", color: "text-red-400" },
-                { name: "Speed Arena", tag: "WPM Test", color: "text-orange-400" },
-                { name: "Shortcuts Dojo", tag: "Hotkeys", color: "text-cyan-400" },
-              ].map((g) => (
-                <div
-                  key={g.name}
-                  className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold flex items-center gap-1 ${
-                    isDark ? "bg-slate-950/80 border-slate-800 text-slate-300" : "bg-slate-100 border-slate-200 text-slate-700"
-                  }`}
-                >
-                  <span className={g.color}>•</span>
-                  <span>{g.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
             <button
               onClick={onNavigateToArcade}
-              className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-black text-xs uppercase tracking-wider shadow-md hover:scale-102 transition-all cursor-pointer"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-orange-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
-              <span>Enter Arcade</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>Launch Arcade Hub</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </motion.div>
 
-        {/* CARD 3: 20+ Bespoke Keycap Themes & Palettes */}
+        {/* ============================================================ */}
+        {/* 🎨 BENTO CARD: 20+ Bespoke Keycap Themes (Col-span 4)         */}
+        {/* ============================================================ */}
         <motion.div
-          whileHover={{ y: -6, transition: { duration: 0.2 } }}
-          className={`rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-lg transition-all ${
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          className={`md:col-span-4 rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-xl transition-all relative overflow-hidden ${
             isDark
-              ? "bg-slate-900/80 border-slate-800 hover:border-violet-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
-              : "bg-white/90 border-slate-200/90 hover:border-violet-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.06)]"
+              ? "bg-slate-900/85 border-slate-800 hover:border-violet-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]"
+              : "bg-white/90 border-slate-200/90 hover:border-violet-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.08)]"
           }`}
         >
           <div className="flex flex-col gap-4">
-            {/* Top Badge & Icon */}
             <div className="flex items-center justify-between">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-md shadow-violet-500/20">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-lg shadow-violet-500/20">
                 <Palette className="w-5 h-5" />
               </div>
               <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/30">
@@ -218,58 +160,104 @@ export function SwitchShowcase({
             </div>
 
             <div>
-              <h3 className="text-lg font-black tracking-tight mb-1.5">
-                Bespoke Keycap Themes
+              <h3 className="text-lg font-black tracking-tight mb-1">
+                Theme Studio
               </h3>
               <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                Personalize your 3D mechanical keyboard in real-time with curated designer colorways and keycap styles.
+                Instant 1-click preview of curated 3D keycap palettes with custom modifier color zoning.
               </p>
             </div>
 
-            {/* Color Swatch Dot Previews */}
-            <div className="flex items-center gap-2 pt-2">
+            {/* Color Swatches Grid */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               {[
-                { bg: "bg-orange-500 ring-orange-400/40", name: "Sunset" },
-                { bg: "bg-cyan-500 ring-cyan-400/40", name: "Cyberpunk" },
-                { bg: "bg-emerald-500 ring-emerald-400/40", name: "Matcha" },
-                { bg: "bg-violet-500 ring-violet-400/40", name: "Neon" },
-                { bg: "bg-pink-500 ring-pink-400/40", name: "Pastel" },
-                { bg: "bg-slate-800 ring-slate-600/40", name: "Stealth" },
+                { bg: "bg-orange-500", name: "Sunset Glow" },
+                { bg: "bg-cyan-500", name: "Cyberpunk" },
+                { bg: "bg-emerald-500", name: "Matcha" },
+                { bg: "bg-violet-500", name: "Neon Violet" },
+                { bg: "bg-pink-500", name: "Cotton Candy" },
+                { bg: "bg-amber-400", name: "Obsidian Gold" },
+                { bg: "bg-slate-800", name: "Stealth Dark" },
               ].map((c, i) => (
                 <div
                   key={i}
                   title={c.name}
-                  className={`w-5 h-5 rounded-full ${c.bg} ring-2 hover:scale-125 transition-transform cursor-pointer shadow-xs`}
+                  className={`w-6 h-6 rounded-full ${c.bg} ring-2 ring-white/20 hover:scale-125 transition-transform cursor-pointer shadow-xs`}
                 />
               ))}
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800">
             <button
               onClick={onOpenThemes}
-              className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl border border-violet-500/40 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
             >
-              <span>Explore Themes</span>
+              <span>Open Theme Palette</span>
               <Palette className="w-3.5 h-3.5" />
             </button>
           </div>
         </motion.div>
 
-        {/* CARD 4: Supabase Cloud Sync & Real-Time Security */}
+        {/* ============================================================ */}
+        {/* ⌨️ BENTO CARD: 3D Keyboard Workbench (Col-span 4)            */}
+        {/* ============================================================ */}
         <motion.div
-          whileHover={{ y: -6, transition: { duration: 0.2 } }}
-          className={`rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-lg transition-all ${
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          className={`md:col-span-4 rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-xl transition-all ${
             isDark
-              ? "bg-slate-900/80 border-slate-800 hover:border-emerald-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
-              : "bg-white/90 border-slate-200/90 hover:border-emerald-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.06)]"
+              ? "bg-slate-900/85 border-slate-800 hover:border-cyan-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]"
+              : "bg-white/90 border-slate-200/90 hover:border-cyan-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.08)]"
           }`}
         >
           <div className="flex flex-col gap-4">
-            {/* Top Badge & Icon */}
             <div className="flex items-center justify-between">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20">
-                <Database className="w-5 h-5" />
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/20">
+                <Layers className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                Interactive 3D
+              </span>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-black tracking-tight mb-1">
+                Exploded 3D Assembly
+              </h3>
+              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                Scroll-driven mechanical disassembly, 68-key compact ANSI layout, tactile keypress physics, and live hotkey tracker HUD.
+              </p>
+            </div>
+
+            <div className={`p-2.5 rounded-2xl border text-[11px] font-mono flex items-center justify-between ${
+              isDark ? "bg-slate-950/70 border-slate-800 text-cyan-400" : "bg-slate-100 border-slate-200 text-cyan-600"
+            }`}>
+              <span>68-Key Compact ANSI</span>
+              <span>100% Responsive</span>
+            </div>
+          </div>
+
+          <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <span>Live Keystroke Lighting</span>
+            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+          </div>
+        </motion.div>
+
+        {/* ============================================================ */}
+        {/* ☁️ BENTO CARD: Cloud Progress & Security (Col-span 4)         */}
+        {/* ============================================================ */}
+        <motion.div
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          className={`md:col-span-4 rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-xl transition-all ${
+            isDark
+              ? "bg-slate-900/85 border-slate-800 hover:border-emerald-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]"
+              : "bg-white/90 border-slate-200/90 hover:border-emerald-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.08)]"
+          }`}
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20">
+                <ShieldCheck className="w-5 h-5" />
               </div>
               <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                 Cloud Live
@@ -277,37 +265,76 @@ export function SwitchShowcase({
             </div>
 
             <div>
-              <h3 className="text-lg font-black tracking-tight mb-1.5">
-                Cloud Analytics & Sync
+              <h3 className="text-lg font-black tracking-tight mb-1">
+                Live Cloud Sync
               </h3>
               <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                Real-time student progress, WPM records, and multi-device persistence powered by PostgreSQL.
+                Real-time high scores, WPM tracking, and streak progression securely stored with PBKDF2-SHA512 password encryption.
               </p>
             </div>
 
-            {/* Feature Checkpoints */}
-            <div className="flex flex-col gap-1.5 pt-1 text-[11px]">
-              <div className="flex items-center gap-2 text-slate-300">
+            <div className="flex flex-col gap-1.5 text-[11px]">
+              <div className="flex items-center gap-1.5 text-slate-300">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="truncate">PBKDF2-SHA512 Salted Security</span>
+                <span className="truncate">PBKDF2-SHA512 Cryptographic Salt</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-300">
+              <div className="flex items-center gap-1.5 text-slate-300">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="truncate">Instant High-Score Leaderboards</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="truncate">Real-time Student Activity Sync</span>
+                <span className="truncate">Multi-Game Progress Retention</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px]">
-            <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+          <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-emerald-400 font-bold">
+            <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Live Cloud Connected</span>
+              <span>Real-Time Cloud Connected</span>
             </span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <Database className="w-3.5 h-3.5 text-emerald-400" />
+          </div>
+        </motion.div>
+
+        {/* ============================================================ */}
+        {/* 🎧 BENTO CARD: 5-Track Ambient Lo-Fi Soundtrack (Col-span 4)  */}
+        {/* ============================================================ */}
+        <motion.div
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          className={`md:col-span-4 rounded-3xl border p-6 flex flex-col justify-between backdrop-blur-xl shadow-xl transition-all ${
+            isDark
+              ? "bg-slate-900/85 border-slate-800 hover:border-amber-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.5)]"
+              : "bg-white/90 border-slate-200/90 hover:border-amber-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.08)]"
+          }`}
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/20">
+                <Headphones className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                5 Lo-Fi Tracks
+              </span>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-black tracking-tight mb-1">
+                Ambient Focus Soundtrack
+              </h3>
+              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                Relaxing ambient lo-fi tracks in a smart shuffle queue that plays every song before reshuffling.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 text-[10px] font-mono text-slate-400">
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/40 border border-slate-700/50">Sunlight</span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/40 border border-slate-700/50">Steaming Mug</span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/40 border border-slate-700/50">Afternoon</span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/40 border border-slate-700/50">Last Keystroke</span>
+            </div>
+          </div>
+
+          <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-amber-400 font-bold">
+            <span>Zero-Repeat Smart Shuffle</span>
+            <Music className="w-3.5 h-3.5 text-amber-400" />
           </div>
         </motion.div>
 
