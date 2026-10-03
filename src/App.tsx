@@ -1044,7 +1044,7 @@ export default function KeyboardLandingPage() {
                         ? "Sign in to unlock the Arcade, save typing metrics, and access all 16 levels"
                         : authMode === "signup"
                         ? "Join SETU to track muscle memory streaks, personal best WPM, and leaderboards"
-                        : "Enter your registered email or username to update your password across Supabase"}
+                        : "Enter your registered email or username to choose a new password"}
                     </p>
                   </div>
                 </div>
@@ -1334,7 +1334,7 @@ export default function KeyboardLandingPage() {
                     });
 
                     if (res.success) {
-                      setForgotSuccessMessage("Password reset successfully! Synced across Supabase.");
+                      setForgotSuccessMessage("Password reset successfully!");
                       setLoginEmail(forgotEmail.trim());
                       setLoginPassword("");
                       setForgotNewPassword("");
