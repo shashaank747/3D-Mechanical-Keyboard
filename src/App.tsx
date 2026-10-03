@@ -583,7 +583,11 @@ export default function KeyboardLandingPage() {
           </div>
 
           {/* Switch Anatomy & Technical Showcase */}
-          <SwitchShowcase theme={currentTheme} />
+          <SwitchShowcase
+            theme={currentTheme}
+            onNavigateToArcade={() => handleLaunchArcade("start")}
+            onOpenThemes={() => setIsThemeSidebarOpen(true)}
+          />
         </>
       )}
 
